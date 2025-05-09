@@ -43,11 +43,28 @@ def run_truthfulqa_evaluation():
         tokenizer.pad_token = tokenizer.eos_token
 
     print(f"Loading model: {MODEL_NAME}")
-    model = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME,
-        torch_dtype=torch.float16 if DEVICE == "cuda" else torch.float32,
-        device_map="auto" if DEVICE == "cuda" else None
-    )
+    if DEVICE == "cuda":
+        # Configure BitsAndBytesConfig for 4-bit quantization
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+        )
+        print("Applying 4-bit BNB quantization as CUDA is available.")
+        model = AutoModelForCausalLM.from_pretrained(
+            MODEL_NAME,
+            quantization_config=bnb_config,
+            device_map="auto"
+        )
+    else:
+        print("CUDA not available. Loading model in default precision (float32 for CPU).")
+        model = AutoModelForCausalLM.from_pretrained(
+            MODEL_NAME,
+            torch_dtype=torch.float32,
+            device_map=None
+        )
+    
     # To check number of layers for DoLa:
     config = model.config
     print(f"Model has {config.num_hidden_layers} layers.")
