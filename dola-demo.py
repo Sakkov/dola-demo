@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from datasets import load_dataset
 import evaluate
 import numpy as np
@@ -17,9 +17,24 @@ EVALUATION_METRIC_NAME = "rouge"
 
 DOLA_LAYERS_SETTING = "high"
 
+# Define the template
+PROMPT_TEMPLATE = """Answer the following question in short. Do not give explanations only the answer.
+Question: {question}
+Answer:
+"""
 
 def run_truthfulqa_evaluation():
-    print(f"Using device: {DEVICE}")
+    # Report the configuration parameters
+    print("\n--- Configuration ---")
+    print(f"Model: {MODEL_NAME}")
+    print(f"Device: {DEVICE}")
+    print(f"Max New Tokens: {MAX_NEW_TOKENS}")
+    print(f"Repetition Penalty: {REPETITION_PENALTY}")
+    print(f"Number of Samples: {NUM_SAMPLES_TO_TEST}")
+    print(f"Evaluation Metric: {EVALUATION_METRIC_NAME}")
+    print(f"DoLa Layers Setting: {DOLA_LAYERS_SETTING}")
+    print(f"Prompt template: \n{PROMPT_TEMPLATE}")
+    print("---\n")
 
     # 1. Load Model and Tokenizer
     print(f"Loading tokenizer: {MODEL_NAME}")
@@ -68,7 +83,9 @@ def run_truthfulqa_evaluation():
             print(f"Question: {question}")
             print(f"Reference Answers:\n{reference_answers}")
 
-        inputs = tokenizer(question, return_tensors="pt").to(DEVICE)
+        prompt = PROMPT_TEMPLATE.format(question=question)
+
+        inputs = tokenizer(prompt, return_tensors="pt").to(DEVICE)
 
         # --- Generation with DoLa ---
         if display_example:
@@ -84,7 +101,7 @@ def run_truthfulqa_evaluation():
             repetition_penalty=REPETITION_PENALTY,
             pad_token_id=tokenizer.eos_token_id
         )
-        answer_dola = tokenizer.batch_decode(outputs_dola[:, inputs.input_ids.shape[-1]:], skip_special_tokens=True)[0].strip()
+        answer_dola = tokenizer.batch_decode(outputs_dola[:, inputs.input_ids.shape[-1]:], skip_special_tokens=True)[0].strip().split('\n')[0]
         if display_example:
             print(f"DoLa Answer: {answer_dola}")
 
@@ -118,7 +135,7 @@ def run_truthfulqa_evaluation():
             repetition_penalty=REPETITION_PENALTY,
             pad_token_id=tokenizer.eos_token_id
         )
-        answer_baseline = tokenizer.batch_decode(outputs_baseline[:, inputs.input_ids.shape[-1]:], skip_special_tokens=True)[0].strip()
+        answer_baseline = tokenizer.batch_decode(outputs_baseline[:, inputs.input_ids.shape[-1]:], skip_special_tokens=True)[0].strip().split('\n')[0]
         if display_example:
             print(f"Baseline Answer: {answer_baseline}")
 
