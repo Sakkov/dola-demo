@@ -9,11 +9,12 @@ from tqdm import tqdm
 MODEL_NAME = "Qwen/Qwen3-8B"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-MAX_NEW_TOKENS = 60
+MAX_NEW_TOKENS = 20
 REPETITION_PENALTY = 1.2
 NUM_SAMPLES_TO_TEST = 817
 NUM_EXAMPLES_TO_DISPLAY = 10
 EVALUATION_METRIC_NAME = "rouge"
+BNB_QUANTIZATION = True
 
 DOLA_LAYERS_SETTING = "high"
 
@@ -32,6 +33,7 @@ def run_truthfulqa_evaluation():
     print(f"Repetition Penalty: {REPETITION_PENALTY}")
     print(f"Number of Samples: {NUM_SAMPLES_TO_TEST}")
     print(f"Evaluation Metric: {EVALUATION_METRIC_NAME}")
+    print(f"BNB Quantization: {BNB_QUANTIZATION}")
     print(f"DoLa Layers Setting: {DOLA_LAYERS_SETTING}")
     print(f"Prompt template: \n{PROMPT_TEMPLATE}")
     print("---\n")
@@ -43,7 +45,7 @@ def run_truthfulqa_evaluation():
         tokenizer.pad_token = tokenizer.eos_token
 
     print(f"Loading model: {MODEL_NAME}")
-    if DEVICE == "cuda":
+    if DEVICE == "cuda" and BNB_QUANTIZATION:
         # Configure BitsAndBytesConfig for 4-bit quantization
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -51,14 +53,28 @@ def run_truthfulqa_evaluation():
             bnb_4bit_compute_dtype=torch.bfloat16,
             bnb_4bit_use_double_quant=True,
         )
-        print("Applying 4-bit BNB quantization as CUDA is available.")
+        print("Applying 4-bit BNB quantization as CUDA is available and BNB quantization is enabled.")
         model = AutoModelForCausalLM.from_pretrained(
             MODEL_NAME,
             quantization_config=bnb_config,
             device_map="auto"
         )
+    elif DEVICE != "cuda" and BNB_QUANTIZATION:
+        print("CUDA not available. Loading model in float32 precision on CPU.")
+        model = AutoModelForCausalLM.from_pretrained(
+            MODEL_NAME,
+            torch_dtype=torch.float32,
+            device_map=None
+        )
+    elif DEVICE == "cuda" and not BNB_QUANTIZATION:
+        print("Loading model in bfloat16 precision on CUDA.")
+        model = AutoModelForCausalLM.from_pretrained(
+            MODEL_NAME,
+            torch_dtype=torch.bfloat16,
+            device_map="auto"
+        )
     else:
-        print("CUDA not available. Loading model in default precision (float32 for CPU).")
+        print("Loading model in float32 precision on CPU.")
         model = AutoModelForCausalLM.from_pretrained(
             MODEL_NAME,
             torch_dtype=torch.float32,
