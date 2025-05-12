@@ -1,0 +1,25 @@
+name: dola-demo
+channels:
+  - nvidia
+  - pytorch
+  - conda-forge
+dependencies:
+  - pytorch
+  - pytorch-cuda=12.1
+  - pandas
+  - pydantic
+  - accelerate
+  - sentencepiece
+  - protobuf
+  - faiss-gpu
+  - sacremoses
+  - pip
+  - pip:
+    - langchain
+    - langchain-community
+    - langchain-huggingface
+    - bitsandbytes
+    - evaluate
+    - nltk
+    - rouge_score
+    - -e transformers-4.51.3-with-dola-score

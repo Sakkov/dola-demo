@@ -1,0 +1,3 @@
+[submodule "transformers-4.51.3-with-dola-score"]
+	path = transformers-4.51.3-with-dola-score
+	url = git@github.com:Sakkov/transformers-with-dola-score.git
