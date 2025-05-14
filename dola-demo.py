@@ -5,51 +5,46 @@ import evaluate
 import numpy as np
 from tqdm import tqdm
 
-# CONFIGURATION
-MODEL_NAME = "huggyllama/llama-7b"
-
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-MAX_NEW_TOKENS = 50
-REPETITION_PENALTY = None
-NUM_SAMPLES_TO_TEST = 817
-NUM_EXAMPLES_TO_DISPLAY = 10
-EVALUATION_METRIC_NAME = "rouge"
-BNB_QUANTIZATION = True
-DO_SAMPLE = True
-TEMPERATURE = 0.9
-TOP_P = 0.95
-TOP_K = 0
-
-DOLA_LAYERS_SETTING = [0,2,4,6,8,10,12,14,32]
-
-# Define the template
-PROMPT_TEMPLATE = """Answer the following question in short. Do not give explanations only the answer.
+def run_truthfulqa_evaluation(
+    model_name="huggyllama/llama-7b",
+    device="cuda" if torch.cuda.is_available() else "cpu",
+    max_new_tokens=50,
+    repetition_penalty=None,
+    num_samples_to_test=817,
+    num_examples_to_display=10,
+    evaluation_metric_name="rouge",
+    bnb_quantization=True,
+    do_sample=True,
+    temperature=0.9,
+    top_p=0.95,
+    top_k=0,
+    dola_layers_setting=[0,2,4,6,8,10,12,14,32],
+    prompt_template="""Answer the following question in short. Do not give explanations only the answer.
 Question: {question}
 Answer:
 """
-
-def run_truthfulqa_evaluation():
+):
     # Report the configuration parameters
     print("\n--- Configuration ---")
-    print(f"Model: {MODEL_NAME}")
-    print(f"Device: {DEVICE}")
-    print(f"Max New Tokens: {MAX_NEW_TOKENS}")
-    print(f"Repetition Penalty: {REPETITION_PENALTY}")
-    print(f"Number of Samples: {NUM_SAMPLES_TO_TEST}")
-    print(f"Evaluation Metric: {EVALUATION_METRIC_NAME}")
-    print(f"BNB Quantization: {BNB_QUANTIZATION}")
-    print(f"DoLa Layers Setting: {DOLA_LAYERS_SETTING}")
-    print(f"Prompt template: \n{PROMPT_TEMPLATE}")
+    print(f"Model: {model_name}")
+    print(f"Device: {device}")
+    print(f"Max New Tokens: {max_new_tokens}")
+    print(f"Repetition Penalty: {repetition_penalty}")
+    print(f"Number of Samples: {num_samples_to_test}")
+    print(f"Evaluation Metric: {evaluation_metric_name}")
+    print(f"BNB Quantization: {bnb_quantization}")
+    print(f"DoLa Layers Setting: {dola_layers_setting}")
+    print(f"Prompt template: \n{prompt_template}")
     print("---\n")
 
     # 1. Load Model and Tokenizer
-    print(f"Loading tokenizer: {MODEL_NAME}")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    print(f"Loading tokenizer: {model_name}")
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    print(f"Loading model: {MODEL_NAME}")
-    if DEVICE == "cuda" and BNB_QUANTIZATION:
+    print(f"Loading model: {model_name}")
+    if device == "cuda" and bnb_quantization:
         # Configure BitsAndBytesConfig for 4-bit quantization
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -59,28 +54,28 @@ def run_truthfulqa_evaluation():
         )
         print("Applying 4-bit BNB quantization as CUDA is available and BNB quantization is enabled.")
         model = AutoModelForCausalLM.from_pretrained(
-            MODEL_NAME,
+            model_name,
             quantization_config=bnb_config,
             device_map="auto"
         )
-    elif DEVICE != "cuda" and BNB_QUANTIZATION:
+    elif device != "cuda" and bnb_quantization:
         print("CUDA not available. Loading model in float32 precision on CPU.")
         model = AutoModelForCausalLM.from_pretrained(
-            MODEL_NAME,
+            model_name,
             torch_dtype=torch.float32,
             device_map=None
         )
-    elif DEVICE == "cuda" and not BNB_QUANTIZATION:
+    elif device == "cuda" and not bnb_quantization:
         print("Loading model in bfloat16 precision on CUDA.")
         model = AutoModelForCausalLM.from_pretrained(
-            MODEL_NAME,
+            model_name,
             torch_dtype=torch.bfloat16,
             device_map="auto"
         )
     else:
         print("Loading model in float32 precision on CPU.")
         model = AutoModelForCausalLM.from_pretrained(
-            MODEL_NAME,
+            model_name,
             torch_dtype=torch.float32,
             device_map=None
         )
@@ -97,30 +92,30 @@ def run_truthfulqa_evaluation():
 
 
     # 3. Load Evaluation Metric
-    print(f"Loading {EVALUATION_METRIC_NAME} metric...")
-    metric = evaluate.load(EVALUATION_METRIC_NAME)
+    print(f"Loading {evaluation_metric_name} metric...")
+    metric = evaluate.load(evaluation_metric_name)
 
 
     # 4. Iterate, Generate, and Evaluate
-    print(f"Testing on {NUM_SAMPLES_TO_TEST} samples from TruthfulQA...")
+    print(f"Testing on {num_samples_to_test} samples from TruthfulQA...")
 
     dola_scores = []
     baseline_scores = []
-    display_indices = np.linspace(0, NUM_SAMPLES_TO_TEST - 1, NUM_EXAMPLES_TO_DISPLAY, dtype=int)
+    display_indices = np.linspace(0, num_samples_to_test - 1, num_examples_to_display, dtype=int)
     print(f"Displaying examples at indices: {display_indices}")
 
-    for i in tqdm(range(NUM_SAMPLES_TO_TEST)):
+    for i in tqdm(range(num_samples_to_test)):
         display_example = i in display_indices
         sample = dataset[i]
         question = sample["question"]
         reference_answers = sample["correct_answers"] # Best answer also available
 
         if display_example:
-            print(f"\n--- Sample {i+1}/{NUM_SAMPLES_TO_TEST} ---")
+            print(f"\n--- Sample {i+1}/{num_samples_to_test} ---")
             print(f"Question: {question}")
             print(f"Reference Answers:\n{reference_answers}")
 
-        prompt = PROMPT_TEMPLATE.format(question=question)
+        prompt = prompt_template.format(question=question)
 
         inputs = tokenizer(prompt, return_tensors="pt").to(DEVICE)
 
@@ -129,13 +124,13 @@ def run_truthfulqa_evaluation():
             print(f"Generating with DoLa (dola_layers='{DOLA_LAYERS_SETTING}')...")
         outputs_dola = model.generate(
             **inputs,
-            max_new_tokens=MAX_NEW_TOKENS,
-            dola_layers=DOLA_LAYERS_SETTING,
-            do_sample=DO_SAMPLE,
-            temperature=TEMPERATURE,
-            top_p=TOP_P,
-            top_k=TOP_K,
-            repetition_penalty=REPETITION_PENALTY,
+            max_new_tokens=max_new_tokens,
+            dola_layers=dola_layers_setting,
+            do_sample=do_sample,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            repetition_penalty=repetition_penalty,
             pad_token_id=tokenizer.eos_token_id
         )
         answer_dola = tokenizer.batch_decode(outputs_dola[:, inputs.input_ids.shape[-1]:], skip_special_tokens=True)[0].strip().split('\n')[0]
@@ -164,12 +159,12 @@ def run_truthfulqa_evaluation():
             print("Generating with Baseline (No DoLa)...")
         outputs_baseline = model.generate(
             **inputs,
-            max_new_tokens=MAX_NEW_TOKENS,
-            do_sample=DO_SAMPLE,
-            temperature=TEMPERATURE,
-            top_p=TOP_P,
-            top_k=TOP_K,
-            repetition_penalty=REPETITION_PENALTY,
+            max_new_tokens=max_new_tokens,
+            do_sample=do_sample,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            repetition_penalty=repetition_penalty,
             pad_token_id=tokenizer.eos_token_id
         )
         answer_baseline = tokenizer.batch_decode(outputs_baseline[:, inputs.input_ids.shape[-1]:], skip_special_tokens=True)[0].strip().split('\n')[0]
