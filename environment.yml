@@ -22,4 +22,5 @@ dependencies:
     - evaluate
     - nltk
     - rouge_score
+    - matplotlib
     - -e transformers-4.51.3-with-dola-score

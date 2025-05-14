@@ -6,7 +6,7 @@ import numpy as np
 from tqdm import tqdm
 
 # CONFIGURATION
-MODEL_NAME = "Qwen/Qwen3-8B"
+MODEL_NAME = "Qwen/Qwen3-14B"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MAX_NEW_TOKENS = 20
