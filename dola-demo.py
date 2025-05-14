@@ -22,7 +22,8 @@ def run_truthfulqa_evaluation(
     prompt_template="""Answer the following question in short. Do not give explanations only the answer.
 Question: {question}
 Answer:
-"""
+""",
+    verbose=True,
 ):
     # Report the configuration parameters
     print("\n--- Configuration ---")
@@ -38,12 +39,14 @@ Answer:
     print("---\n")
 
     # 1. Load Model and Tokenizer
-    print(f"Loading tokenizer: {model_name}")
+    if verbose:
+        print(f"Loading tokenizer: {model_name}")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    print(f"Loading model: {model_name}")
+    if verbose:
+        print(f"Loading model: {model_name}")
     if device == "cuda" and bnb_quantization:
         # Configure BitsAndBytesConfig for 4-bit quantization
         bnb_config = BitsAndBytesConfig(
@@ -52,28 +55,32 @@ Answer:
             bnb_4bit_compute_dtype=torch.bfloat16,
             bnb_4bit_use_double_quant=True,
         )
-        print("Applying 4-bit BNB quantization as CUDA is available and BNB quantization is enabled.")
+        if verbose:
+            print("Applying 4-bit BNB quantization as CUDA is available and BNB quantization is enabled.")
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             quantization_config=bnb_config,
             device_map="auto"
         )
     elif device != "cuda" and bnb_quantization:
-        print("CUDA not available. Loading model in float32 precision on CPU.")
+        if verbose:
+            print("CUDA not available. Loading model in float32 precision on CPU.")
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=torch.float32,
             device_map=None
         )
     elif device == "cuda" and not bnb_quantization:
-        print("Loading model in bfloat16 precision on CUDA.")
+        if verbose:
+            print("Loading model in bfloat16 precision on CUDA.")
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=torch.bfloat16,
             device_map="auto"
         )
     else:
-        print("Loading model in float32 precision on CPU.")
+        if verbose:
+            print("Loading model in float32 precision on CPU.")
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=torch.float32,
@@ -82,7 +89,8 @@ Answer:
     
     # To check number of layers for DoLa:
     config = model.config
-    print(f"Model has {config.num_hidden_layers} layers.")
+    if verbose:
+        print(f"Model has {config.num_hidden_layers} layers.")
 
     model.eval()
 
@@ -92,12 +100,14 @@ Answer:
 
 
     # 3. Load Evaluation Metric
-    print(f"Loading {evaluation_metric_name} metric...")
+    if verbose:
+        print(f"Loading {evaluation_metric_name} metric...")
     metric = evaluate.load(evaluation_metric_name)
 
 
     # 4. Iterate, Generate, and Evaluate
-    print(f"Testing on {num_samples_to_test} samples from TruthfulQA...")
+    if verbose:
+        print(f"Testing on {num_samples_to_test} samples from TruthfulQA...")
 
     dola_scores = []
     baseline_scores = []
@@ -117,11 +127,11 @@ Answer:
 
         prompt = prompt_template.format(question=question)
 
-        inputs = tokenizer(prompt, return_tensors="pt").to(DEVICE)
+        inputs = tokenizer(prompt, return_tensors="pt").to(device)
 
         # --- Generation with DoLa ---
         if display_example:
-            print(f"Generating with DoLa (dola_layers='{DOLA_LAYERS_SETTING}')...")
+            print(f"Generating with DoLa (dola_layers='{dola_layers_setting}')...")
         outputs_dola = model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
@@ -216,4 +226,21 @@ Answer:
     print("\n--- Test Complete ---")
 
 if __name__ == "__main__":
-    run_truthfulqa_evaluation()
+    run_truthfulqa_evaluation(
+        model_name="huggyllama/llama-7b",
+        max_new_tokens=50,
+        repetition_penalty=None,
+        num_samples_to_test=817,
+        num_examples_to_display=10,
+        evaluation_metric_name="rouge",
+        bnb_quantization=True,
+        do_sample=True,
+        temperature=0.9,
+        top_p=0.95,
+        top_k=0,
+        dola_layers_setting=[0,2,4,6,8,10,12,14,32],
+        prompt_template="""Answer the following question in short. Do not give explanations only the answer.
+Question: {question}
+Answer:
+"""
+    )
