@@ -6,17 +6,21 @@ import numpy as np
 from tqdm import tqdm
 
 # CONFIGURATION
-MODEL_NAME = "Qwen/Qwen3-14B"
+MODEL_NAME = "huggyllama/llama-7b"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-MAX_NEW_TOKENS = 20
-REPETITION_PENALTY = 1.2
+MAX_NEW_TOKENS = 50
+REPETITION_PENALTY = None
 NUM_SAMPLES_TO_TEST = 817
 NUM_EXAMPLES_TO_DISPLAY = 10
 EVALUATION_METRIC_NAME = "rouge"
 BNB_QUANTIZATION = True
+DO_SAMPLE = True
+TEMPERATURE = 0.9
+TOP_P = 0.95
+TOP_K = 0
 
-DOLA_LAYERS_SETTING = "high"
+DOLA_LAYERS_SETTING = [0,2,4,6,8,10,12,14,32]
 
 # Define the template
 PROMPT_TEMPLATE = """Answer the following question in short. Do not give explanations only the answer.
@@ -127,10 +131,10 @@ def run_truthfulqa_evaluation():
             **inputs,
             max_new_tokens=MAX_NEW_TOKENS,
             dola_layers=DOLA_LAYERS_SETTING,
-            do_sample=False, # Deterministic output for comparison
-            temperature=None,
-            top_p=None,
-            top_k=None,
+            do_sample=DO_SAMPLE,
+            temperature=TEMPERATURE,
+            top_p=TOP_P,
+            top_k=TOP_K,
             repetition_penalty=REPETITION_PENALTY,
             pad_token_id=tokenizer.eos_token_id
         )
@@ -161,10 +165,10 @@ def run_truthfulqa_evaluation():
         outputs_baseline = model.generate(
             **inputs,
             max_new_tokens=MAX_NEW_TOKENS,
-            do_sample=False,
-            temperature=None,
-            top_p=None,
-            top_k=None,
+            do_sample=DO_SAMPLE,
+            temperature=TEMPERATURE,
+            top_p=TOP_P,
+            top_k=TOP_K,
             repetition_penalty=REPETITION_PENALTY,
             pad_token_id=tokenizer.eos_token_id
         )
