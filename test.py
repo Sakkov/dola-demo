@@ -73,7 +73,7 @@ if not generated_sequence_ids.tolist():
     print("No tokens were generated.")
     decoded_tokens = []
     scores_for_generated_tokens = []
-    normalized_scores = numpy.array([])
+    _scores = numpy.array([])
 else:
     # Decode tokens for plot labels
     # Using tokenizer.decode for cleaner representation
@@ -107,21 +107,21 @@ else:
 
     if max_score == min_score:
         # Handle cases where all scores are the same (e.g., single token generated)
-        # Set normalized scores to 0.5 to allow plotting a flat line
-        normalized_scores = numpy.full_like(scores_np, 0.5, dtype=float)
+        # Set  scores to 0.5 to allow plotting a flat line
+        _scores = numpy.full_like(scores_np, 0.5, dtype=float)
     else:
-        normalized_scores = (scores_np - min_score) / (max_score - min_score)
+        _scores = scores_np
     
-    print(f"Normalized scores: {normalized_scores.tolist()}")
+    print(f" scores: {_scores.tolist()}")
 
-# Plot the normalized scores
-if decoded_tokens and normalized_scores.size > 0: # Check if there's anything to plot
+# Plot the  scores
+if decoded_tokens and _scores.size > 0: # Check if there's anything to plot
     plt.figure(figsize=(12, 7)) # Adjusted figsize for potentially longer token labels
-    plt.plot(range(len(normalized_scores)), normalized_scores, marker='o', linestyle='-', color='b')
+    plt.plot(range(len(_scores)), _scores, marker='o', linestyle='-', color='b')
     plt.xticks(range(len(decoded_tokens)), decoded_tokens, rotation=45, ha="right") # Use tokens as x-labels
-    plt.title('Normalized Scores of Generated Tokens')
+    plt.title(' Scores of Generated Tokens')
     plt.xlabel('Generated Token')
-    plt.ylabel('Normalized Score of Generated Token')
+    plt.ylabel(' Score of Generated Token')
     plt.grid(True)
     plt.tight_layout() # Adjust layout to prevent labels from overlapping
     plt.savefig("scores_plot.png")
