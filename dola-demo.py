@@ -147,41 +147,42 @@ def run_truthfulqa_evaluation(
     top_k=0,
     dola_layers_setting=[0,2,4,6,8,10,12,14,32],
     prompt_template=ANSWERING_PROMPT_TEMPLATE,
-    verbose=True,
+    verbose=1,
     stop_strings=["Q:"],
     judge_prompt_template=JUDGE_PROMPT_TEMPLATE,
 ):
     # Report the configuration parameters
-    print("\n--- Configuration ---")
-    print(f"Device: {device}")
-    print(f"Number of Samples: {num_samples_to_test}")
-    print(f"Evaluation Metric: {evaluation_metric_name if not judge_model_name else 'AI Judge'}")
-    print(f"Number of Examples to Display: {num_examples_to_display}")
-    print(f"Verbosity: {'On' if verbose else 'Off'}")
-    print()
-    print(f"QA Model: {model_name}")
-    print(f"QA Max New Tokens: {max_new_tokens}")
-    print(f"QA Do Sample: {do_sample}")
-    print(f"QA Repetition Penalty: {repetition_penalty}")
-    print(f"QA BNB Quantization: {bnb_quantization}")
-    print(f"QA DoLa Layers Setting: {dola_layers_setting if dola_layers_setting else 'Not using DoLa'}")
-    print(f"QA Stop Strings: {stop_strings}")
-    print(f"QA Prompt template: \n{prompt_template}")
-    print()
-    print(f"AI Judge Model: {judge_model_name if judge_model_name else 'Not using AI Judge'}")
+    print("\n===================================")
+    print("        Configuration        ")
+    print("===================================\n")
+    print(f"  Device: {device}")
+    print(f"  Number of Samples: {num_samples_to_test}")
+    print(f"  Evaluation Metric: {evaluation_metric_name if not judge_model_name else 'AI Judge'}")
+    if verbose >= 1:
+        print(f"  Number of Examples to Display: {num_examples_to_display}")
+    print(f"  Verbosity Level: {verbose}\n")
+    print(f"  QA Model: {model_name}")
+    print(f"  QA Max New Tokens: {max_new_tokens}")
+    print(f"  QA Do Sample: {do_sample}")
+    print(f"  QA Repetition Penalty: {repetition_penalty}")
+    print(f"  QA BNB Quantization: {bnb_quantization}")
+    print(f"  QA DoLa Layers Setting: {dola_layers_setting if dola_layers_setting else 'Not using DoLa'}")
+    print(f"  QA Stop Strings: {stop_strings}")
+    print(f"  QA Prompt template: \n{prompt_template}\n")
+    print(f"  AI Judge Model: {judge_model_name if judge_model_name else 'Not using AI Judge'}")
     if judge_model_name:
-        print(f"Judge Prompt template: \n{judge_prompt_template}")
-    print("---\n")
+        print(f"  Judge Prompt template: \n{judge_prompt_template}")
+    print("\n===================================\n")
 
     # 1. Load Model and Tokenizer
-    if verbose:
+    if verbose >= 2:
         print(f"Loading tokenizer: {model_name}")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    if verbose:
-        print(f"Loading model: {model_name}")
+    if verbose >= 2:
+        print(f"\nLoading model: {model_name}")
     if device == "cuda" and bnb_quantization:
         # Configure BitsAndBytesConfig for 4-bit quantization
         bnb_config = BitsAndBytesConfig(
@@ -190,7 +191,7 @@ def run_truthfulqa_evaluation(
             bnb_4bit_compute_dtype=torch.bfloat16,
             bnb_4bit_use_double_quant=True,
         )
-        if verbose:
+        if verbose >= 2:
             print("Applying 4-bit BNB quantization as CUDA is available and BNB quantization is enabled.")
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
@@ -198,7 +199,7 @@ def run_truthfulqa_evaluation(
             device_map="auto"
         )
     elif device != "cuda" and bnb_quantization:
-        if verbose:
+        if verbose >= 2:
             print("CUDA not available. Loading model in float32 precision on CPU.")
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
@@ -206,7 +207,7 @@ def run_truthfulqa_evaluation(
             device_map=None
         )
     elif device == "cuda" and not bnb_quantization:
-        if verbose:
+        if verbose >= 2:
             print("Loading model in bfloat16 precision on CUDA.")
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
@@ -214,7 +215,7 @@ def run_truthfulqa_evaluation(
             device_map="auto"
         )
     else:
-        if verbose:
+        if verbose >= 2:
             print("Loading model in float32 precision on CPU.")
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
@@ -224,29 +225,29 @@ def run_truthfulqa_evaluation(
     
     # To check number of layers for DoLa:
     config = model.config
-    if verbose:
-        print(f"Model has {config.num_hidden_layers} layers.")
+    if verbose >= 2:
+        print(f"Model '{model_name}' has {config.num_hidden_layers} layers.\n")
 
     model.eval()
 
     # 2. Load TruthfulQA Dataset
-    if verbose:
-        print("Loading TruthfulQA dataset (generation task)")
+    if verbose >= 2:
+        print("Loading TruthfulQA dataset (generation task)...")
     dataset = load_dataset("truthful_qa", "generation", split="validation")
 
 
     # 3. Load Evaluation Metric
     if judge_model_name:
-        if verbose:
-            print(f"Using a Judge-AI to evaluate semantic similarity.")
+        if verbose >= 2:
+            print(f"\nUsing a Judge-AI ('{judge_model_name}') to evaluate semantic similarity.")
     else:
-        if verbose:
-            print(f"Loading {evaluation_metric_name} metric...")
+        if verbose >= 2:
+            print(f"\nLoading {evaluation_metric_name} metric...")
         metric = evaluate.load(evaluation_metric_name)
 
 
     # 4. Iterate, Generate, and Evaluate
-    if verbose:
+    if verbose >= 1:
         print(f"Generating answers for {num_samples_to_test} samples from TruthfulQA...")
 
     # Store results for later evaluation
@@ -256,25 +257,26 @@ def run_truthfulqa_evaluation(
     # Ensure display_indices are within the bounds of num_samples_to_test
     num_examples_to_display = min(num_examples_to_display, num_samples_to_test)
     display_indices = np.linspace(0, num_samples_to_test - 1, num_examples_to_display, dtype=int)
-    print(f"Displaying examples at indices: {display_indices}")
+    if verbose >= 1 and num_examples_to_display > 0:
+        print(f"Will display detailed examples for indices: {display_indices}\n")
 
-    for i in tqdm(range(num_samples_to_test)):
+    for i in tqdm(range(num_samples_to_test), disable=verbose < 1):
         display_example = i in display_indices
         sample = dataset[i]
         question = sample["question"]
         reference_answers = sample["correct_answers"] # Best answer also available
 
-        if display_example:
-            print(f"\n--- Sample {i+1}/{num_samples_to_test} ---")
-            print(f"Question: {question}")
-            print(f"Reference Answers:\n{reference_answers}")
+        if display_example and verbose >= 2:
+            print(f"\n-------------------- Sample {i+1}/{num_samples_to_test} --------------------")
+            print(f"  Question: {question}")
+            print(f"  Reference Answers:\n    {reference_answers}")
 
         prompt = prompt_template.format(question=question)
         
         inputs = tokenizer(prompt, return_tensors="pt").to(device)
 
-        # --- Generation with DoLa ---
-        if display_example:
+        # --- Generation with DoLa --- #
+        if display_example and verbose >= 2:
             print(f"Generating with DoLa (dola_layers='{dola_layers_setting}')...")
         outputs_dola = model.generate(
             **inputs,
@@ -290,11 +292,11 @@ def run_truthfulqa_evaluation(
             tokenizer=tokenizer,
         )
         answer_dola = tokenizer.batch_decode(outputs_dola[:, inputs.input_ids.shape[-1]:], skip_special_tokens=True)[0].strip().split('\n')[0]
-        if display_example:
-            print(f"DoLa Answer: {answer_dola}\n")
+        if display_example and verbose >= 2:
+            print(f"  DoLa Answer: {answer_dola}\n")
 
-        # --- Baseline Generation (No DoLa) ---
-        if display_example:
+        # --- Baseline Generation (No DoLa) --- #
+        if display_example and verbose >= 2:
             print("Generating with Baseline (No DoLa)...")
         outputs_baseline = model.generate(
             **inputs,
@@ -309,8 +311,10 @@ def run_truthfulqa_evaluation(
             tokenizer=tokenizer,
         )
         answer_baseline = tokenizer.batch_decode(outputs_baseline[:, inputs.input_ids.shape[-1]:], skip_special_tokens=True)[0].strip().split('\n')[0]
-        if display_example:
-            print(f"Baseline Answer: {answer_baseline}\n")
+        if display_example and verbose >= 2:
+            print(f"  Baseline Answer: {answer_baseline}")
+            print(f"--------------------------------------------------------\n")
+
 
         # Store results for this sample
         evaluation_results.append({
@@ -326,91 +330,98 @@ def run_truthfulqa_evaluation(
 
     # 4. AI Judge Evaluation
     if judge_model_name:
-        print("\n--- AI Judge Evaluation ---")
+        print("\n===================================")
+        print("     AI Judge Evaluation     ")
+        print("===================================\n")
+
         judge_device = device # Use the same device as the generation model for simplicity
 
-        if verbose:
-            print(f"Loading judge tokenizer: {judge_model_name}")
+        if verbose >= 2:
+            print(f"Loading judge tokenizer: {judge_model_name}...")
         judge_tokenizer = AutoTokenizer.from_pretrained(judge_model_name)
         if judge_tokenizer.pad_token is None:
             judge_tokenizer.pad_token = judge_tokenizer.eos_token
 
-        if verbose:
+        if verbose >= 2 and judge_model_name: # Check judge_model_name to avoid printing if not used
             print(f"Loading judge model: {judge_model_name}")
         # Load judge model without quantization for potentially better judgment quality,
         # or add a separate bnb_quantization_judge flag if needed.
         # For simplicity, loading in float32 or bfloat16 depending on device.
         if device == "cuda" and bnb_quantization:
-            # Configure BitsAndBytesConfig for 4-bit quantization
             bnb_config = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_quant_type="nf4",
                 bnb_4bit_compute_dtype=torch.bfloat16,
                 bnb_4bit_use_double_quant=True,
             )
-            if verbose:
-                print("Applying 4-bit BNB quantization as CUDA is available and BNB quantization is enabled.")
+            if verbose >= 2:
+                print("  Applying 4-bit BNB quantization to Judge model as CUDA is available and BNB quantization is enabled.")
             judge_model = AutoModelForCausalLM.from_pretrained(
                 judge_model_name,
                 quantization_config=bnb_config,
                 device_map="auto"
             )
         elif device != "cuda" and bnb_quantization:
-            if verbose:
-                print("CUDA not available. Loading judge_model in float32 precision on CPU.")
+            if verbose >= 2:
+                print("  CUDA not available. Loading Judge model in float32 precision on CPU.")
             judge_model = AutoModelForCausalLM.from_pretrained(
                 judge_model_name,
                 torch_dtype=torch.float32,
                 device_map=None
             )
         elif device == "cuda" and not bnb_quantization:
-            if verbose:
-                print("Loading judge_model in bfloat16 precision on CUDA.")
+            if verbose >= 2:
+                print("  Loading Judge model in bfloat16 precision on CUDA.")
             judge_model = AutoModelForCausalLM.from_pretrained(
                 judge_model_name,
                 torch_dtype=torch.bfloat16,
                 device_map="auto"
             )
-        else:
-            if verbose:
-                print("Loading judge_model in float32 precision on CPU.")
+        elif judge_model_name: # Ensure judge_model is only loaded if judge_model_name is set
+            if verbose >= 2:
+                print("Loading Judge model in float32 precision on CPU.")
             judge_model = AutoModelForCausalLM.from_pretrained(
                 judge_model_name,
                 torch_dtype=torch.float32,
                 device_map=None
             )
-        judge_model.eval()
+        if judge_model_name:
+            judge_model.eval()
+            if verbose >=2: print(f"Judge model '{judge_model_name}' loaded.\n")
 
         def run_judge_inference(judge_model, judge_tokenizer, prompt):
             """Helper function to run inference on the judge model."""
             judge_inputs = judge_tokenizer(prompt, return_tensors="pt").to(judge_device)
             judge_outputs = judge_model.generate(
                 **judge_inputs,
-                max_new_tokens=50, # Use higher token count to inspect justification
-                do_sample=False,
+                max_new_tokens=(50 if verbose < 2 else 3),
+                temperature=0.7,
+                top_p=0.8,
+                top_k=20,
                 pad_token_id=judge_tokenizer.eos_token_id,
-                stop_strings=["\n", "Statement", "Justification", "#"],
+                stop_strings=(["\n", "Statement", "Justification", "#"] if verbose < 2 else None),
                 tokenizer=judge_tokenizer,
             )
             judge_text = judge_tokenizer.batch_decode(judge_outputs[:, judge_inputs.input_ids.shape[-1]:], skip_special_tokens=True)[0].strip()
             return judge_text
 
         def parse_judge_output(judge_output):
-            """Extracts and returns the score from the judge's output."""
+            """Extracts and returns the score and any parsing error message from the judge's output."""
             match = re.search(r"([1-5])", judge_output)
             if match:
                 score = int(match.group(1))
+                return score, None
             else:
                 score = None
-                print(f"Warning: Could not parse score from judge output: '{judge_output}'")
-            
-            return score
+                error_message = f"Warning: Could not parse score from judge output: '{judge_output}'"
+                return score, error_message
 
-        if verbose:
-            print(f"Evaluating {len(evaluation_results)} samples with the AI Judge...")
+        if verbose >= 1:
+            print(f"Evaluating {len(evaluation_results)} generated answer pairs with the AI Judge ('{judge_model_name}')...")
 
-        for i, sample_results in enumerate(tqdm(evaluation_results)):
+        for i, sample_results in enumerate(tqdm(evaluation_results, disable=verbose < 1)):
             display_example = i in display_indices
+            question = sample_results["question"]
             reference_stattements = sample_results["reference_answers"]
             dola_answer = sample_results["dola_answer"]
             baseline_answer = sample_results["baseline_answer"]
@@ -421,46 +432,60 @@ def run_truthfulqa_evaluation(
             scores_dola = []
             scores_baseline = []
             for statement in reference_stattements:
-                if verbose and display_example:
-                    print(f"Evaluating statement: {statement} against the answers:")
-                    print(f"DoLa Answer: {dola_answer}")
-                    print(f"Baseline Answer: {baseline_answer}")
+                if verbose >= 2 and display_example:
+                    print(f"\n  --- Judging Sample {i+1}, Reference: '{statement}' ---")
+                    print(f"    DoLa Answer: {dola_answer}")
+                    print(f"    Baseline Answer: {baseline_answer}")
                 
                 judge_prompt_dola = judge_prompt_template.format(statement_1=statement, statement_2=dola_answer)
                 judge_prompt_baseline = judge_prompt_template.format(statement_1=statement, statement_2=baseline_answer)
-                # if verbose and display_example:
-                #     print(f"DoLa Prompt: {judge_prompt_dola}\n")
-                #     print(f"Baseline Prompt: {judge_prompt_baseline}\n")
+                
+                if verbose >= 3:
+                    print(f"\n    --- Judge Prompts for Sample {i+1}, Ref Statement: '{statement}' ---")
+                    print(f"    Question: {sample_results['question']}")
+                    print(f"    Judge Prompt (DoLa):\n{judge_prompt_dola}\n")
+                    print(f"    Judge Prompt (Baseline):\n{judge_prompt_baseline}\n")
 
                 judge_output_dola = run_judge_inference(judge_model, judge_tokenizer, judge_prompt_dola)
                 judge_output_baseline = run_judge_inference(judge_model, judge_tokenizer, judge_prompt_baseline)
-                if verbose and display_example:
-                    print(f"Judge Output (DoLa): {judge_output_dola}")
-                    print(f"Judge Output (Baseline): {judge_output_baseline}")
                 
-                scores_dola.append(parse_judge_output(judge_output_dola))
-                scores_baseline.append(parse_judge_output(judge_output_baseline))
+                if verbose >= 2 and display_example:
+                    print(f"    Judge Output (DoLa): {judge_output_dola}")
+                    print(f"    Judge Output (Baseline): {judge_output_baseline}")
+                
+                dola_score_val, dola_err = parse_judge_output(judge_output_dola)
+                if dola_err and verbose >= 1:
+                    print(dola_err)
+                scores_dola.append(dola_score_val)
+
+                baseline_score_val, baseline_err = parse_judge_output(judge_output_baseline)
+                if baseline_err and verbose >= 1:
+                    print(baseline_err)
+                scores_baseline.append(baseline_score_val)
+
             score_dola = np.max(scores_dola)
             score_baseline = np.max(scores_baseline)
             sample_results["dola_judge_score"] = score_dola
             sample_results["baseline_judge_score"] = score_baseline
 
-            if display_example:
-                 print(f"\n--- Judge Results for Sample {i+1} ---")
-                 print(f"Question: {question}")
-                 print(f"Reference Statements: {reference_stattements}")
-                 print(f"DoLa Answer: {dola_answer}")
-                 print(f"Parsed Judge (DoLa): {score_dola}")
-                 print(f"Baseline Answer: {baseline_answer}")
-                 print(f"Parsed Judge (Baseline): {score_baseline}")
+            if display_example and verbose >= 2:
+                 print(f"\n  --- Max Judge Scores for Sample {i+1} ---")
+                 print(f"    Question: {question}")
+                 print(f"    Reference Statements: {reference_stattements}")
+                 print(f"    DoLa Answer: {dola_answer} -> Max Judge Score: {score_dola}")
+                 print(f"    Baseline Answer: {baseline_answer} -> Max Judge Score: {score_baseline}")
+                 print(f"  --------------------------------------------\n")
+        if verbose >= 1: print("\n") # Add a newline after the progress bar
 
     # 5. Report Aggregate Results
-    print("\n--- Evaluation Summary ---")
+    print("\n===================================")
+    print("      Evaluation Summary      ")
+    print("===================================\n")
+
 
     if judge_model_name:
         dola_scores = [r["dola_judge_score"] for r in evaluation_results if r["dola_judge_score"] is not None]
         baseline_scores = [r["baseline_judge_score"] for r in evaluation_results if r["baseline_judge_score"] is not None]
-
         print(f"\nAI Judge Results (using {judge_model_name}):")
 
         if dola_scores:
@@ -479,10 +504,14 @@ def run_truthfulqa_evaluation(
             print(f"  DoLa Improvement over Baseline: {(avg_dola_score - avg_baseline_score):.2f}")
         else:
             print("  Unable to calculate improvement due to missing scores.")
+        print() # Add a newline for spacing
     else:
         print("\nAI Judge was not configured (judge_model_name is None). No judge evaluation performed.")
 
-    print("\n--- Test Complete ---")
+    if verbose >= 1:
+        print("\n===================================")
+        print("         Test Complete         ")
+        print("===================================\n")
 
 if __name__ == "__main__":
     run_truthfulqa_evaluation(
@@ -500,6 +529,6 @@ if __name__ == "__main__":
         top_k=0,
         dola_layers_setting=[0,2,4,6,8,10,12,14,32],
         # prompt_template=None,
-        verbose=True,
+        verbose=2,
         stop_strings=["Q:"],
     )
