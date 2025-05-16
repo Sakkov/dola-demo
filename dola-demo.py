@@ -513,22 +513,60 @@ def run_truthfulqa_evaluation(
         print("         Test Complete         ")
         print("===================================\n")
 
+    # Return the results
+    return evaluation_results
+
 if __name__ == "__main__":
-    run_truthfulqa_evaluation(
-        model_name="huggyllama/llama-7b",
-        max_new_tokens=50,
-        repetition_penalty=None,
-        num_samples_to_test=817, # Max 817 the size of the benchmark dataset
-        num_examples_to_display=10,
-        evaluation_metric_name="rouge",
-        bnb_quantization=True,
-        judge_model_name="Qwen/Qwen3-14B",
-        do_sample=True,
-        temperature=0.9,
-        top_p=0.95,
-        top_k=0,
-        dola_layers_setting=[0,2,4,6,8,10,12,14,32],
-        # prompt_template=None,
-        verbose=2,
-        stop_strings=["Q:"],
-    )
+    
+    # Test multiple runs
+    evaluation_results = []
+    for _ in range(3):
+        evaluation_result = run_truthfulqa_evaluation(
+            model_name="huggyllama/llama-7b",
+            max_new_tokens=50,
+            repetition_penalty=None,
+            num_samples_to_test=817, # Max 817 the size of the benchmark dataset
+            num_examples_to_display=10,
+            evaluation_metric_name="rouge",
+            bnb_quantization=True,
+            judge_model_name="Qwen/Qwen3-14B",
+            do_sample=True,
+            temperature=0.9,
+            top_p=0.95,
+            top_k=0,
+            dola_layers_setting=[0,2,4,6,8,10,12,14,32],
+            # prompt_template=None,
+            verbose=0,
+            stop_strings=["Q:"],
+        )
+        evaluation_results.append(evaluation_result)
+    
+    # Print the averages
+    dola_scores = []
+    baseline_scores = []
+    for i in len(evaluation_results):
+        dola_scores.append(evaluation_results[i]["dola_judge_score"])
+        baseline_scores.append(evaluation_results[i]["baseline_judge_score"])
+        
+    print("\n===================================")
+    print("      Aggregate Results      ")
+    print("===================================\n")
+    
+    if dola_scores:
+        avg_dola_score = np.mean(dola_scores)
+        print(f"  Average DoLa Judge-Score (across all runs): {avg_dola_score:.2f}")
+    else:
+        print("  No valid scores found for DoLa answers across all runs.")
+
+    if baseline_scores:
+        avg_baseline_score = np.mean(baseline_scores)
+        print(f"  Average Baseline Judge-Score (across all runs): {avg_baseline_score:.2f}")
+    else:
+        print("  No valid scores found for Baseline answers across all runs.")
+
+    if dola_scores and baseline_scores:
+        print(f"  DoLa Improvement over Baseline (across all runs): {(avg_dola_score - avg_baseline_score):.2f}")
+    else:
+        print("  Unable to calculate improvement due to missing scores across all runs.")
+    print()
+    
