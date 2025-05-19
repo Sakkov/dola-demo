@@ -20,7 +20,7 @@ def _run_judge_inference(judge_model, judge_tokenizer, prompt, judge_device, ver
     judge_text = judge_tokenizer.batch_decode(judge_outputs[:, judge_inputs.input_ids.shape[-1]:], skip_special_tokens=True)[0].strip()
     return judge_text
 
-def _parse_judge_output(judge_output):
+def _parse_comparison_output(judge_output):
     """Extracts and returns the score and any parsing error message from the judge's output."""
     match = re.search(r"([1-5])", judge_output)
     if match:
@@ -31,7 +31,111 @@ def _parse_judge_output(judge_output):
         error_message = f"Warning: Could not parse score from judge output: '{judge_output}'"
         return score, error_message
 
+def _parse_yes_no_output(judge_output):
+    """Extracts and returns the score and any parsing error message from the judge's output."""
+    match = re.search(r"(yes|no)", judge_output)
+    if match:
+        score = 1 if match.group(1) == "yes" else 0
+        return score, None
+    else:
+        score = None
+        error_message = f"Warning: Could not parse score from judge output: '{judge_output}'"
+        return score, error_message
+    
+def comparison_judge(
+        reference_statements,
+        dola_answer,
+        baseline_answer,
+        judge_model,
+        judge_tokenizer,
+        judge_prompt_template,
+        judge_device,
+        verbose,
+        i,
+        display_example,
+        scores_dola,
+        scores_baseline,
+        question,
+    ):
+    """Runs comparison-based evaluation for a single sample."""
+    for statement in reference_statements:
+            if verbose >= 2 and display_example:
+                print(f"\n  --- Judging Sample {i+1}, Reference: '{statement}' ---")
+                print(f"    Question: {question}")
+                print(f"    DoLa Answer: {dola_answer}")
+                print(f"    Baseline Answer: {baseline_answer}")
+            
+            judge_prompt_dola = judge_prompt_template.format(statement_1=statement, statement_2=dola_answer)
+            judge_prompt_baseline = judge_prompt_template.format(statement_1=statement, statement_2=baseline_answer)
+            
+            if verbose >= 4:
+                print(f"\n    --- Judge Prompts for Sample {i+1}, Ref Statement: '{statement}' ---")
+                print(f"    Question: {question}")
+                print(f"    Judge Prompt (DoLa):\n{judge_prompt_dola}\n")
+                print(f"    Judge Prompt (Baseline):\n{judge_prompt_baseline}\n")
+
+            judge_output_dola = _run_judge_inference(judge_model, judge_tokenizer, judge_prompt_dola, judge_device, verbose)
+            judge_output_baseline = _run_judge_inference(judge_model, judge_tokenizer, judge_prompt_baseline, judge_device, verbose)
+            
+            if verbose >= 2 and display_example:
+                print(f"    Judge Output (DoLa): \n{judge_output_dola}\n")
+                print(f"    Judge Output (Baseline): \n{judge_output_baseline}\n")
+            
+            dola_score_val, dola_err = _parse_comparison_output(judge_output_dola)
+            if dola_err and verbose >= 1: print(dola_err)
+            if dola_score_val is not None: scores_dola.append(dola_score_val)
+
+            baseline_score_val, baseline_err = _parse_comparison_output(judge_output_baseline)
+            if baseline_err and verbose >= 1: print(baseline_err)
+            if baseline_score_val is not None: scores_baseline.append(baseline_score_val)
+
+def binary_judge(
+        dola_answer,
+        baseline_answer,
+        judge_model,
+        judge_tokenizer,
+        judge_prompt_template,
+        judge_device,
+        verbose,
+        i,
+        display_example,
+        scores_dola,
+        scores_baseline,
+        question,
+    ):
+    """Runs true-false evaluation for a single sample."""
+    if verbose >= 2 and display_example:
+        print(f"\n  --- Judging Sample {i+1} ---")
+        print(f"    Question: {question}")
+        print(f"    DoLa Answer: {dola_answer}")
+        print(f"    Baseline Answer: {baseline_answer}")
+    
+    judge_prompt_dola = judge_prompt_template.format(question=question, answer=dola_answer)
+    judge_prompt_baseline = judge_prompt_template.format(question=question, answer=baseline_answer)
+    
+    if verbose >= 3:
+        print(f"\n    --- Judge Prompts for Sample {i+1} ---")
+        print(f"    Question: {question}")
+        print(f"    Judge Prompt (DoLa):\n{judge_prompt_dola}\n")
+        print(f"    Judge Prompt (Baseline):\n{judge_prompt_baseline}\n")
+
+    judge_output_dola = _run_judge_inference(judge_model, judge_tokenizer, judge_prompt_dola, judge_device, verbose)
+    judge_output_baseline = _run_judge_inference(judge_model, judge_tokenizer, judge_prompt_baseline, judge_device, verbose)
+    
+    if verbose >= 2 and display_example:
+        print(f"    Judge Output (DoLa): \n{judge_output_dola}\n")
+        print(f"    Judge Output (Baseline): \n{judge_output_baseline}\n")
+    
+    dola_score_val, dola_err = _parse_yes_no_output(judge_output_dola)
+    if dola_err and verbose >= 1: print(dola_err)
+    if dola_score_val is not None: scores_dola.append(dola_score_val)
+
+    baseline_score_val, baseline_err = _parse_yes_no_output(judge_output_baseline)
+    if baseline_err and verbose >= 1: print(baseline_err)
+    if baseline_score_val is not None: scores_baseline.append(baseline_score_val)
+
 def evaluate_with_ai_judge(
+    eval_method,
     evaluation_results,
     judge_model_name,
     judge_prompt_template,
@@ -50,6 +154,9 @@ def evaluate_with_ai_judge(
     print("===================================\n")
 
     judge_device = device 
+
+    if verbose >= 1:
+        print(f"AI Judge Evaluation method: {eval_method}")
 
     if verbose >= 2:
         print(f"Loading judge tokenizer: {judge_model_name}...")
@@ -114,36 +221,56 @@ def evaluate_with_ai_judge(
 
         scores_dola = []
         scores_baseline = []
-        for statement in reference_statements:
-            if verbose >= 2 and display_example:
-                print(f"\n  --- Judging Sample {i+1}, Reference: '{statement}' ---")
-                print(f"    Question: {question}")
-                print(f"    DoLa Answer: {dola_answer}")
-                print(f"    Baseline Answer: {baseline_answer}")
-            
-            judge_prompt_dola = judge_prompt_template.format(statement_1=statement, statement_2=dola_answer)
-            judge_prompt_baseline = judge_prompt_template.format(statement_1=statement, statement_2=baseline_answer)
-            
-            if verbose >= 3:
-                print(f"\n    --- Judge Prompts for Sample {i+1}, Ref Statement: '{statement}' ---")
-                print(f"    Question: {sample_results['question']}")
-                print(f"    Judge Prompt (DoLa):\n{judge_prompt_dola}\n")
-                print(f"    Judge Prompt (Baseline):\n{judge_prompt_baseline}\n")
 
-            judge_output_dola = _run_judge_inference(judge_model, judge_tokenizer, judge_prompt_dola, judge_device, verbose)
-            judge_output_baseline = _run_judge_inference(judge_model, judge_tokenizer, judge_prompt_baseline, judge_device, verbose)
-            
-            if verbose >= 2 and display_example:
-                print(f"    Judge Output (DoLa): {judge_output_dola}")
-                print(f"    Judge Output (Baseline): {judge_output_baseline}")
-            
-            dola_score_val, dola_err = _parse_judge_output(judge_output_dola)
-            if dola_err and verbose >= 1: print(dola_err)
-            if dola_score_val is not None: scores_dola.append(dola_score_val)
-
-            baseline_score_val, baseline_err = _parse_judge_output(judge_output_baseline)
-            if baseline_err and verbose >= 1: print(baseline_err)
-            if baseline_score_val is not None: scores_baseline.append(baseline_score_val)
+        # TODO: add comparison and true-false judge options
+        if eval_method == "comparison":
+            comparison_judge(
+                reference_statements,
+                dola_answer,
+                baseline_answer,
+                judge_model,
+                judge_tokenizer,
+                judge_prompt_template,
+                judge_device,
+                verbose,
+                i,
+                display_example,
+                scores_dola,
+                scores_baseline,
+                question,
+            )
+        elif eval_method == "true-false":
+            binary_judge(
+                dola_answer,
+                baseline_answer,
+                judge_model,
+                judge_tokenizer,
+                judge_prompt_template,
+                judge_device,
+                verbose,
+                i,
+                display_example,
+                scores_dola,
+                scores_baseline,
+                question,
+            )
+        else:
+            if verbose >= 1:
+                print("AI Judge evaluation method not specified using 'true-false' evaluator.")
+            binary_judge(
+                dola_answer,
+                baseline_answer,
+                judge_model,
+                judge_tokenizer,
+                judge_prompt_template,
+                judge_device,
+                verbose,
+                i,
+                display_example,
+                scores_dola,
+                scores_baseline,
+                question,
+            )
 
         sample_results["dola_judge_score"] = np.max(scores_dola) if scores_dola else None
         sample_results["baseline_judge_score"] = np.max(scores_baseline) if scores_baseline else None

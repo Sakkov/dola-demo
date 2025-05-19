@@ -5,7 +5,7 @@ import evaluate
 import numpy as np
 from tqdm import tqdm
 from evaluation_logic.utils import suppress_transformers_warnings, get_display_indices
-from evaluation_logic.prompts import ANSWERING_PROMPT_TEMPLATE, JUDGE_PROMPT_TEMPLATE
+from evaluation_logic.prompts import ANSWERING_PROMPT_TEMPLATE, JUDGE_PROMPT_TEMPLATE, JUDGE_PROMPT_TEMPLATE_TRUE_FALSE
 from evaluation_logic.ai_judge import evaluate_with_ai_judge
 
 suppress_transformers_warnings()
@@ -28,7 +28,8 @@ def run_truthfulqa_evaluation(
     prompt_template=ANSWERING_PROMPT_TEMPLATE,
     verbose=1,
     stop_strings=["Q:"],
-    judge_prompt_template=JUDGE_PROMPT_TEMPLATE,
+    judge_prompt_template=JUDGE_PROMPT_TEMPLATE_TRUE_FALSE,
+    judge_method="true-false",
 ):
     # Report the configuration parameters
     print("\n===================================")
@@ -207,8 +208,9 @@ def run_truthfulqa_evaluation(
             "baseline_judge_score": None,
         })
 
-    # 4. AI Judge Evaluation (if configured)
+    # 4. AI Judge Evaluation
     evaluation_results = evaluate_with_ai_judge(
+        eval_method=judge_method,
         evaluation_results=evaluation_results,
         judge_model_name=judge_model_name,
         judge_prompt_template=judge_prompt_template,
@@ -266,7 +268,7 @@ if __name__ == "__main__":
             model_name="huggyllama/llama-7b",
             max_new_tokens=50,
             repetition_penalty=None,
-            num_samples_to_test=817, # Max 817 the size of the benchmark dataset
+            num_samples_to_test=100, # Max 817 the size of the benchmark dataset
             num_examples_to_display=10,
             evaluation_metric_name="rouge",
             bnb_quantization=True,
@@ -277,8 +279,10 @@ if __name__ == "__main__":
             top_k=0,
             dola_layers_setting=[0,2,4,6,8,10,12,14,32],
             # prompt_template=None,
-            verbose=1,
+            verbose=2,
             stop_strings=["Q:"],
+            judge_prompt_template=JUDGE_PROMPT_TEMPLATE_TRUE_FALSE,
+            judge_method="true-false",
         )
         evaluation_results.append(evaluation_result)
     
