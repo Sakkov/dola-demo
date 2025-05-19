@@ -21,6 +21,11 @@ def suppress_transformers_warnings():
         category=UserWarning,
         module="transformers.generation.configuration_utils"
     )
+    warnings.filterwarnings(
+        "ignore", 
+        message=".*LlamaTokenizerFast.*legacy.*",
+        category=UserWarning,
+    )
 
 def get_display_indices(num_samples_to_test, num_examples_to_display):
     """Determines which examples to display based on total samples and desired display count."""

@@ -137,7 +137,7 @@ def run_truthfulqa_evaluation(
     # Determine which examples to display
     # Ensure display_indices are within the bounds of num_samples_to_test
     display_indices = get_display_indices(num_samples_to_test, num_examples_to_display)
-    if verbose >= 1 and num_examples_to_display > 0:
+    if verbose >= 2 and num_examples_to_display > 0:
         print(f"Will display detailed examples for indices: {display_indices}\n")
 
     for i in tqdm(range(num_samples_to_test), disable=verbose < 1):
@@ -259,30 +259,52 @@ def run_truthfulqa_evaluation(
     # Return the results
     return evaluation_results
 
-if __name__ == "__main__":
+def run_many(
+    N = 3,
+    model_name="huggyllama/llama-7b",
+    max_new_tokens=50,
+    repetition_penalty=None,
+    num_samples_to_test=100, # Max 817 the size of the benchmark dataset
+    num_examples_to_display=10,
+    evaluation_metric_name="rouge",
+    bnb_quantization=True,
+    judge_model_name="Qwen/Qwen3-14B",
+    do_sample=True,
+    temperature=0.9,
+    top_p=0.95,
+    top_k=0,
+    dola_layers_setting=[0,2,4,6,8,10,12,14,32],
+    prompt_template=ANSWERING_PROMPT_TEMPLATE,
+    verbose=1,
+    stop_strings=["Q:"],
+    judge_prompt_template=JUDGE_PROMPT_TEMPLATE_TRUE_FALSE,
+    judge_method="true-false",
     
-    # Test multiple runs
+):
+    """Run the same test multiple times and print out the agregate results."""
+    
     evaluation_results = []
-    for _ in range(3):
+    for _ in range(N):
         evaluation_result = run_truthfulqa_evaluation(
-            model_name="huggyllama/llama-7b",
-            max_new_tokens=50,
-            repetition_penalty=None,
-            num_samples_to_test=100, # Max 817 the size of the benchmark dataset
-            num_examples_to_display=10,
-            evaluation_metric_name="rouge",
-            bnb_quantization=True,
-            judge_model_name="Qwen/Qwen3-14B",
-            do_sample=True,
-            temperature=0.9,
-            top_p=0.95,
-            top_k=0,
-            dola_layers_setting=[0,2,4,6,8,10,12,14,32],
-            # prompt_template=None,
-            verbose=2,
-            stop_strings=["Q:"],
-            judge_prompt_template=JUDGE_PROMPT_TEMPLATE_TRUE_FALSE,
-            judge_method="true-false",
+            model_name=model_name,
+            device=device,
+            max_new_tokens=max_new_tokens,
+            repetition_penalty=repetition_penalty,
+            num_samples_to_test=num_samples_to_test,
+            num_examples_to_display=num_examples_to_display,
+            evaluation_metric_name=evaluation_metric_name,
+            bnb_quantization=bnb_quantization,
+            judge_model_name=judge_model_name,
+            do_sample=do_sample,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            dola_layers_setting=dola_layers_setting,
+            prompt_template=prompt_template,
+            verbose=verbose,
+            stop_strings=stop_strings,
+            judge_prompt_template=judge_prompt_template,
+            judge_method=judge_method,
         )
         evaluation_results.append(evaluation_result)
     
@@ -318,4 +340,69 @@ if __name__ == "__main__":
     else:
         print("  Unable to calculate improvement due to missing scores across all runs.")
     print()
+
+if __name__ == "__main__":
+
+    # Common metrics
+    models_to_test = [
+        "mistralai/Mistral-7B-Instruct-v0.3",
+        "huggyllama/llama-7b",
+    ]
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    max_new_tokens = 50
+    repetition_penalty = None
+    num_samples_to_test = 100
+    num_examples_to_display = 10
+    bnb_quantization = True
+    judge_model_name = "Qwen/Qwen3-14B"
+    do_sample=True
+    temperature=0.9
+    top_p=0.95
+    top_k=0
+    dola_layers_settings = [
+        [
+            "high",
+            "low",
+        ],
+        [
+            "high",
+            "low",
+            [0,2,4,6,8,10,12,14,32],
+        ],
+        
+    ]
+    verbose = 0
+    stop_strings = ["Q:"]
+    judge_prompt_template = JUDGE_PROMPT_TEMPLATE_TRUE_FALSE
+    judge_method = "true-false"
+    runs_per_model = 3
+
+    import time
+    start_time = time.time()
+    for i, model_name in enumerate(models_to_test):
+        for dola_layers_setting in dola_layers_settings[i]:
+            run_many(
+                N = runs_per_model,
+                model_name=model_name,
+                max_new_tokens=max_new_tokens,
+                repetition_penalty=repetition_penalty,
+                num_samples_to_test=num_samples_to_test,
+                num_examples_to_display=num_examples_to_display,
+                evaluation_metric_name="rouge",
+                bnb_quantization=bnb_quantization,
+                judge_model_name=judge_model_name,
+                do_sample=do_sample,
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
+                dola_layers_setting=dola_layers_setting,
+                prompt_template=ANSWERING_PROMPT_TEMPLATE,
+                verbose=verbose,
+                stop_strings=stop_strings,
+                judge_prompt_template=judge_prompt_template,
+                judge_method=judge_method,
+            )
     
+    end_time = time.time()
+    total_time = end_time - start_time
+    print(f"\nTotal execution time: {int(total_time // 3600)}:{int((total_time % 3600) // 60)}:{int(total_time % 60)}\n")

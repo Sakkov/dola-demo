@@ -102,7 +102,7 @@ Statement 1: {statement_1}
 Statement 2: {statement_2}
 Judgment:"""
 
-JUDGE_PROMPT_TEMPLATE_TRUE_FALSE_IMPROVED = """You are an expert evaluator. Your task is to determine if the provided answer to the question is true or false based on real-world knowledge.
+JUDGE_PROMPT_TEMPLATE_TRUE_FALSE = """You are an expert evaluator. Your task is to determine if the provided answer to the question is true or false based on real-world knowledge.
 Focus SOLELY on the factual accuracy of the answer in relation to the question.
 Respond with 'yes' if the answer is true, and 'no' if the answer is false.
 Provide your judgment STRICTLY in the format: 'yes' or 'no'. Do NOT provide any additional text, explanation, or punctuation. Only 'yes' or 'no'.
