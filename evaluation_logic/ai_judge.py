@@ -149,9 +149,10 @@ def evaluate_with_ai_judge(
             print("\nAI Judge not configured (judge_model_name is None). Skipping AI Judge evaluation.")
         return evaluation_results
 
-    print("\n===================================")
-    print("     AI Judge Evaluation     ")
-    print("===================================\n")
+    if verbose >= 0:
+        print("\n===================================")
+        print("     AI Judge Evaluation     ")
+        print("===================================\n")
 
     judge_device = device 
 
@@ -212,7 +213,7 @@ def evaluate_with_ai_judge(
     if verbose >= 1:
         print(f"Evaluating {len(evaluation_results)} generated answer pairs with the AI Judge ('{judge_model_name}')...")
 
-    for i, sample_results in enumerate(tqdm(evaluation_results, disable=verbose < 1)):
+    for i, sample_results in enumerate(tqdm(evaluation_results, disable=verbose == 0, desc=f"Evaluating Samples with ({judge_model_name})")):
         display_example = i in display_indices
         question = sample_results["question"]
         reference_statements = sample_results["reference_answers"]
@@ -222,7 +223,6 @@ def evaluate_with_ai_judge(
         scores_dola = []
         scores_baseline = []
 
-        # TODO: add comparison and true-false judge options
         if eval_method == "comparison":
             comparison_judge(
                 reference_statements,
@@ -272,8 +272,8 @@ def evaluate_with_ai_judge(
                 question,
             )
 
-        sample_results["dola_judge_score"] = np.max(scores_dola) if scores_dola else None
-        sample_results["baseline_judge_score"] = np.max(scores_baseline) if scores_baseline else None
+        sample_results["dola_judge_score"] = int(np.max(scores_dola)) if scores_dola else None
+        sample_results["baseline_judge_score"] = int(np.max(scores_baseline)) if scores_baseline else None
 
         if display_example and verbose >= 2:
              print(f"\n  --- Max Judge Scores for Sample {i+1} ---")

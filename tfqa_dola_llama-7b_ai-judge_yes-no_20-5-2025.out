@@ -1,0 +1,619 @@
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: mistralai/Mistral-7B-Instruct-v0.3
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: high
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/3 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 1/3 [00:07<00:15,  7.85s/it]Loading checkpoint shards:  67%|██████▋   | 2/3 [00:15<00:07,  7.91s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:23<00:00,  7.81s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:23<00:00,  7.83s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:17<00:17, 17.63s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:23<00:00, 10.61s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:23<00:00, 11.66s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 0.67
+  Average Baseline Judge-Score: 1.00
+  DoLa Improvement over Baseline: -0.33
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: mistralai/Mistral-7B-Instruct-v0.3
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: high
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/3 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 1/3 [00:07<00:14,  7.47s/it]Loading checkpoint shards:  67%|██████▋   | 2/3 [00:15<00:07,  7.58s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:22<00:00,  7.33s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:22<00:00,  7.39s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:14<00:14, 14.05s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:19<00:00,  8.73s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:19<00:00,  9.53s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 1.00
+  Average Baseline Judge-Score: 0.67
+  DoLa Improvement over Baseline: 0.33
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: mistralai/Mistral-7B-Instruct-v0.3
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: high
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/3 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 1/3 [00:06<00:13,  6.93s/it]Loading checkpoint shards:  67%|██████▋   | 2/3 [00:14<00:07,  7.36s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:20<00:00,  6.83s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:20<00:00,  6.93s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:13<00:13, 13.93s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:19<00:00,  8.85s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:19<00:00,  9.61s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 0.67
+  Average Baseline Judge-Score: 1.00
+  DoLa Improvement over Baseline: -0.33
+
+
+===================================
+      Aggregate Results      
+===================================
+
+  Average DoLa Judge-Score (across all runs): 0.78
+  Average Baseline Judge-Score (across all runs): 0.89
+  DoLa Improvement over Baseline (across all runs): -0.11
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: mistralai/Mistral-7B-Instruct-v0.3
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: low
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/3 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 1/3 [00:06<00:12,  6.02s/it]Loading checkpoint shards:  67%|██████▋   | 2/3 [00:07<00:03,  3.47s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:09<00:00,  2.58s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:09<00:00,  3.07s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:02<00:02,  2.77s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:03<00:00,  1.83s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:03<00:00,  1.97s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 1.00
+  Average Baseline Judge-Score: 1.00
+  DoLa Improvement over Baseline: 0.00
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: mistralai/Mistral-7B-Instruct-v0.3
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: low
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/3 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 1/3 [00:01<00:03,  1.62s/it]Loading checkpoint shards:  67%|██████▋   | 2/3 [00:03<00:01,  1.63s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:04<00:00,  1.51s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:04<00:00,  1.54s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:04<00:04,  5.00s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:06<00:00,  2.95s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:06<00:00,  3.25s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 0.67
+  Average Baseline Judge-Score: 1.00
+  DoLa Improvement over Baseline: -0.33
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: mistralai/Mistral-7B-Instruct-v0.3
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: low
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/3 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 1/3 [00:02<00:04,  2.12s/it]Loading checkpoint shards:  67%|██████▋   | 2/3 [00:04<00:02,  2.11s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:06<00:00,  2.11s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:06<00:00,  2.11s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.29s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.01s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.20s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 0.67
+  Average Baseline Judge-Score: 0.67
+  DoLa Improvement over Baseline: 0.00
+
+
+===================================
+      Aggregate Results      
+===================================
+
+  Average DoLa Judge-Score (across all runs): 0.78
+  Average Baseline Judge-Score (across all runs): 0.89
+  DoLa Improvement over Baseline (across all runs): -0.11
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: huggyllama/llama-7b
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: high
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+You are using the default legacy behaviour of the <class 'transformers.models.llama.tokenization_llama_fast.LlamaTokenizerFast'>. This is expected, and simply means that the `legacy` (previous) behavior will be used so nothing changes for you. If you want to use the new behaviour, set `legacy=False`. This should only be set if you understand what it means, and thoroughly read the reason why this was added as explained in https://github.com/huggingface/transformers/pull/24565 - if you loaded a llama tokenizer from a GGUF file you can ignore this message.
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:13<00:13, 13.54s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:18<00:00,  8.42s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:18<00:00,  9.19s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:08<00:08,  8.55s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:13<00:00,  6.29s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:13<00:00,  6.63s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 0.33
+  Average Baseline Judge-Score: 0.33
+  DoLa Improvement over Baseline: 0.00
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: huggyllama/llama-7b
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: high
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:12<00:12, 12.97s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:17<00:00,  8.23s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:17<00:00,  8.94s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:07<00:07,  7.71s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:12<00:00,  6.03s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:12<00:00,  6.28s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 0.33
+  Average Baseline Judge-Score: 1.00
+  DoLa Improvement over Baseline: -0.67
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: huggyllama/llama-7b
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: high
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:05<00:05,  5.81s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:06<00:00,  3.02s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:06<00:00,  3.43s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.31s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  1.99s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.19s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 0.00
+  Average Baseline Judge-Score: 0.67
+  DoLa Improvement over Baseline: -0.67
+
+
+===================================
+      Aggregate Results      
+===================================
+
+  Average DoLa Judge-Score (across all runs): 0.22
+  Average Baseline Judge-Score (across all runs): 0.67
+  DoLa Improvement over Baseline (across all runs): -0.44
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: huggyllama/llama-7b
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: low
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.18s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  1.92s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.11s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.22s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  1.99s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.17s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 1.00
+  Average Baseline Judge-Score: 0.67
+  DoLa Improvement over Baseline: 0.33
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: huggyllama/llama-7b
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: low
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:02<00:02,  2.87s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:03<00:00,  1.79s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:03<00:00,  1.95s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:05<00:05,  5.12s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:06<00:00,  2.97s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:06<00:00,  3.29s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 0.67
+  Average Baseline Judge-Score: 1.00
+  DoLa Improvement over Baseline: -0.33
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: huggyllama/llama-7b
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: low
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:04<00:04,  4.26s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.66s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.90s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:04<00:04,  4.03s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.50s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.73s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 0.33
+  Average Baseline Judge-Score: 1.00
+  DoLa Improvement over Baseline: -0.67
+
+
+===================================
+      Aggregate Results      
+===================================
+
+  Average DoLa Judge-Score (across all runs): 0.67
+  Average Baseline Judge-Score (across all runs): 0.89
+  DoLa Improvement over Baseline (across all runs): -0.22
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: huggyllama/llama-7b
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: [0, 2, 4, 6, 8, 10, 12, 14, 32]
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.74s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.29s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.51s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.23s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:03<00:00,  1.68s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:03<00:00,  1.91s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 0.67
+  Average Baseline Judge-Score: 0.67
+  DoLa Improvement over Baseline: 0.00
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: huggyllama/llama-7b
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: [0, 2, 4, 6, 8, 10, 12, 14, 32]
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.33s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  1.99s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.19s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:04<00:04,  4.66s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:06<00:00,  2.76s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:06<00:00,  3.05s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 0.33
+  Average Baseline Judge-Score: 0.00
+  DoLa Improvement over Baseline: 0.33
+
+
+===================================
+        Configuration        
+===================================
+
+  Device: cuda
+  Number of Samples: 3
+  Evaluation Metric: AI Judge
+  Verbosity Level: 0
+
+  QA Model: huggyllama/llama-7b
+  QA Max New Tokens: 50
+  QA Do Sample: True
+  QA Repetition Penalty: None
+  QA BNB Quantization: True
+  QA DoLa Layers Setting: [0, 2, 4, 6, 8, 10, 12, 14, 32]
+  AI Judge Model: allenai/truthfulqa-truth-judge-llama2-7B
+
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:04<00:04,  4.30s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.68s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.93s/it]
+
+===================================
+     AI Judge Evaluation     
+===================================
+
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.46s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.06s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.27s/it]
+
+===================================
+      Evaluation Summary      
+===================================
+
+
+AI Judge Results (using allenai/truthfulqa-truth-judge-llama2-7B):
+  Average DoLa Judge-Score: 0.67
+  Average Baseline Judge-Score: 0.33
+  DoLa Improvement over Baseline: 0.33
+
+
+===================================
+      Aggregate Results      
+===================================
+
+  Average DoLa Judge-Score (across all runs): 0.56
+  Average Baseline Judge-Score (across all runs): 0.33
+  DoLa Improvement over Baseline (across all runs): 0.22
+
+
+Total execution time: 0:8:25
+

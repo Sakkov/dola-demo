@@ -4,8 +4,7 @@ channels:
   - pytorch
   - conda-forge
 dependencies:
-  - pytorch
-  - pytorch-cuda=12.1
+  - pytorch-gpu>=2.6.0
   - pandas
   - pydantic
   - accelerate
@@ -13,12 +12,12 @@ dependencies:
   - protobuf
   - faiss-gpu
   - sacremoses
+  - bitsandbytes
   - pip
   - pip:
     - langchain
     - langchain-community
     - langchain-huggingface
-    - bitsandbytes
     - evaluate
     - nltk
     - rouge_score
