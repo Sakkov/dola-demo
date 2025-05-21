@@ -359,16 +359,19 @@ if __name__ == "__main__":
     verbose = -1
     device = "cuda" if torch.cuda.is_available() else "cpu"
     bnb_quantization = True
+    runs_per_model = 1
     
     # Generation parameters
     models_to_test = [
         "huggyllama/llama-7b",
         "mistralai/Mistral-7B-Instruct-v0.3",
+        "Qwen/Qwen3-8B",
+        # "Qwen/Qwen3-14B",
     ]
     answering_prompt_template=ANSWERING_PROMPT_TEMPLATE
     max_new_tokens = 50
     repetition_penalty = None
-    num_samples_to_test = 50
+    num_samples_to_test = 817
     num_examples_to_display = 10
     do_sample=True
     temperature=0.9
@@ -378,15 +381,27 @@ if __name__ == "__main__":
         [
             "high",
             "low",
-            [16,18,20,22,24,26,28,30,32],
+            # [16,18,20,22,24,26,28,30,32],
             list(range(0,32,2)),
         ],
         [
             "high",
             "low",
-            [16,18,20,22,24,26,28,30,32],
-            list(range(0,32,2)),
+            # [16,18,20,22,24,26,28,30,32],
+            # list(range(0,32,2)), 
         ],
+        [
+            "high",
+            "low",
+            # [18,20,22,24,26,28,30,32,34,36],
+            list(range(0,36,2)), 
+        ],
+        # [
+        #     "high",
+        #     # "low",
+        #     # [20,22,24,26,28,30,32,34,36,38,40],
+        #     # list(range(0,40,2)), 
+        # ],
         
     ]
     stop_strings = ["Q:"]
@@ -395,7 +410,6 @@ if __name__ == "__main__":
     judge_model_name = "allenai/truthfulqa-truth-judge-llama2-7B"
     judge_prompt_template = JUDGE_PROMPT_TEMPLATE_TRUE_FALSE_SIMPLE
     judge_method = "true-false"
-    runs_per_model = 1
 
     output = {
         "meta-config": {
