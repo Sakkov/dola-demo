@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 MODEL_NAME = "Qwen/Qwen3-4B"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-MAX_NEW_TOKENS = 20
+MAX_NEW_TOKENS = 42
 REPETITION_PENALTY = 1.2
 
 DOLA_LAYERS_SETTING = "high"
@@ -69,14 +69,14 @@ outputs = model.generate(**inputs, **generate_kwargs)
 input_ids_length = inputs.input_ids.shape[1]
 generated_sequence_ids = outputs.sequences[0, input_ids_length:]
 
+decoded_tokens = [] # Initialize for broader scope
+
 if not generated_sequence_ids.tolist():
     print("No tokens were generated.")
-    decoded_tokens = []
     scores_for_generated_tokens = []
     _scores = numpy.array([])
 else:
     # Decode tokens for plot labels
-    # Using tokenizer.decode for cleaner representation
     decoded_tokens = [tokenizer.decode([token_id]) for token_id in generated_sequence_ids.tolist()]
 
     # Extract the scores of the actual generated tokens
@@ -97,35 +97,118 @@ else:
         scores_for_generated_tokens.append(token_logit.item())
     
     print(f"Scores of generated tokens: {scores_for_generated_tokens}")
-    print()
 
-    # Normalize the scores
-    # Convert to numpy array for easier manipulation
-    scores_np = numpy.array(scores_for_generated_tokens)
-    min_score = numpy.min(scores_np)
-    max_score = numpy.max(scores_np)
+    # Convert to numpy array for plotting
+    _scores = numpy.array(scores_for_generated_tokens)
+    print(f"Final scores for plotting: {_scores.tolist()}")
 
-    if max_score == min_score:
-        # Handle cases where all scores are the same (e.g., single token generated)
-        # Set  scores to 0.5 to allow plotting a flat line
-        _scores = numpy.full_like(scores_np, 0.5, dtype=float)
-    else:
-        _scores = scores_np
-    
-    print(f" scores: {_scores.tolist()}")
 
-# Plot the  scores
+# Plot the scores
 if decoded_tokens and _scores.size > 0: # Check if there's anything to plot
-    plt.figure(figsize=(12, 7)) # Adjusted figsize for potentially longer token labels
+    plt.figure(figsize=(12, 7)) 
     plt.plot(range(len(_scores)), _scores, marker='o', linestyle='-', color='b')
-    plt.xticks(range(len(decoded_tokens)), decoded_tokens, rotation=45, ha="right") # Use tokens as x-labels
-    plt.title(' Scores of Generated Tokens')
+    plt.xticks(range(len(decoded_tokens)), decoded_tokens, rotation=45, ha="right") 
+    plt.title('Scores of Generated Tokens')
     plt.xlabel('Generated Token')
-    plt.ylabel(' Score of Generated Token')
+    plt.ylabel('Logit Score of Generated Token')
     plt.grid(True)
-    plt.tight_layout() # Adjust layout to prevent labels from overlapping
+    plt.tight_layout() 
     plt.savefig("scores_plot.png")
     print("\nPlot saved to scores_plot.png")
     plt.show()
 else:
     print("\nSkipping plot as no tokens were generated or scores could not be processed.")
+
+
+# --- ATTENTION PLOTTING SECTION ---
+attention_summary_per_token = []
+_attentions_summary = numpy.array([]) # Initialize
+
+# Check if attentions are available and tokens were generated
+if hasattr(outputs, 'attentions') and outputs.attentions is not None and generated_sequence_ids.numel() > 0:
+    num_generated_tokens_actual = generated_sequence_ids.shape[0]
+    
+    print("\n--- Attention Data ---")
+    # outputs.attentions is a tuple: (attentions_step_1, attentions_step_2, ...)
+    # attentions_step_k is a tuple: (layer_1_att, layer_2_att, ...)
+    # layer_n_att is a tensor: (batch_size, num_heads, seq_len_at_step_k, seq_len_at_step_k)
+    print(f"Number of generation steps for which attentions are available: {len(outputs.attentions)}")
+    
+    if len(outputs.attentions) > 0:
+        attentions_for_first_step = outputs.attentions[0] # Tuple of layer attentions for the first generated token
+        print(f"Number of layers (based on first token's attentions): {len(attentions_for_first_step)}")
+        if len(attentions_for_first_step) > 0:
+            attention_tensor_first_layer_first_step = attentions_for_first_step[0]
+            print(f"Shape of one attention tensor (e.g., 1st token, 1st layer): {attention_tensor_first_layer_first_step.shape}")
+            print(f"  (Expected: Batch Size, Num Heads, Sequence Length at step, Sequence Length at step)")
+
+    print("\nExtracting attention summary per generated token...")
+    # Iterate for each token that was actually generated
+    for i in range(num_generated_tokens_actual):
+        # attentions_at_this_step is a tuple of layer_attention_tensors for the generation of token i
+        attentions_at_this_step = outputs.attentions[i]
+        
+        current_token_all_layers_mean_attentions = []
+        for layer_attention_tensor in attentions_at_this_step:
+            # layer_attention_tensor shape: (batch_size, num_heads, seq_len_at_this_gen_step, seq_len_at_this_gen_step)
+            # We are interested in the attention FROM the last token (the one just generated at this step i)
+            # TO all tokens in the context (prompt + tokens 0 to i).
+            # Assuming batch_size = 1 for typical generation.
+            # attentions_from_last_token_this_layer has shape (num_heads, seq_len_at_this_gen_step)
+            attentions_from_last_token_this_layer = layer_attention_tensor[0, :, -1, :] # [num_heads, seq_len_at_stop_k]
+            
+            # Calculate the mean of these attention weights.
+            # This averages over all heads and all context tokens to which the new token attended for this layer.
+            attn_head_mean_attntions_from_last_token_this_layer = attentions_from_last_token_this_layer.sum(dim=0)
+            current_token_all_layers_mean_attentions.append(attn_head_mean_attntions_from_last_token_this_layer)
+        
+        if current_token_all_layers_mean_attentions:
+            # Average the per-layer mean attention values to get a single summary for this token
+            avg_attention_from_all_layers_this_token = torch.stack(current_token_all_layers_mean_attentions).sum(dim=0)
+            # Append zeros to all previous token rows
+            for i in range(len(attention_summary_per_token)):
+                current_row = attention_summary_per_token[i]
+                new_row = torch.cat((current_row, torch.zeros(1).to(current_row.device)))
+                attention_summary_per_token[i] = new_row
+            attention_summary_per_token.append(avg_attention_from_all_layers_this_token.to("cpu"))
+        else:
+            # This case might occur if a model has no layers or if attentions_at_this_step is empty.
+            attention_summary_per_token.append(0.0) 
+            print(f"Warning: No layer attentions processed for generated token index {i}.")
+    print(f"Calculated attention summary for each token: {attention_summary_per_token}")
+    _attentions_summary = numpy.array(attention_summary_per_token)
+
+else:
+    if not (hasattr(outputs, 'attentions') and outputs.attentions is not None):
+        print("\nAttentions not found in the output. Skipping attention plot.")
+    elif not generated_sequence_ids.numel() > 0: # handles "no tokens generated"
+        # This message is already printed earlier, so we can be silent or more specific.
+        print("\nNo tokens were generated, so no attentions to plot.")
+    # _attentions_summary remains an empty numpy array
+
+
+# Plot the attention
+if _attentions_summary.size > 0:
+    # Create labels for the x-axis (context tokens + generated tokens)
+    input_tokens = tokenizer.batch_decode(inputs.input_ids[0], skip_special_tokens=False)
+    all_tokens = input_tokens + decoded_tokens
+
+    plt.figure(figsize=(15, 10))
+    plt.imshow(_attentions_summary, cmap='viridis', aspect='auto') # Use imshow for matrix visualization
+    plt.colorbar(label='Average Attention Weight')
+
+    # Set ticks and labels
+    plt.xticks(range(len(all_tokens)), all_tokens, rotation=90, ha="center")
+    plt.yticks(range(len(decoded_tokens)), decoded_tokens, va="center")
+
+    plt.title('Average Attention from Generated Tokens to All Tokens (Prompt + Generated)')
+    plt.xlabel('All Tokens (Prompt + Generated)')
+    plt.ylabel('Generated Token')
+    plt.tight_layout()
+    plt.savefig("attention_plot.png")
+    print("\nAttention plot saved to attention_plot.png")
+    plt.show()
+else:
+    print("\nSkipping attention plot as no attention data was processed.")
+    
+print()
