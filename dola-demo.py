@@ -4,7 +4,7 @@ from datasets import load_dataset
 import evaluate
 import numpy as np
 from tqdm import tqdm
-from evaluation_logic.utils import suppress_transformers_warnings, get_display_indices
+from evaluation_logic.utils import suppress_transformers_warnings, get_display_indices, get_date_and_index
 from evaluation_logic.prompts import ANSWERING_PROMPT_TEMPLATE, JUDGE_PROMPT_TEMPLATE, JUDGE_PROMPT_TEMPLATE_TRUE_FALSE, JUDGE_PROMPT_TEMPLATE_TRUE_FALSE_SIMPLE
 from evaluation_logic.ai_judge import evaluate_with_ai_judge
 
@@ -214,7 +214,7 @@ def run_truthfulqa_evaluation(
         judge_model_name=judge_model_name,
         judge_prompt_template=judge_prompt_template,
         device=device,
-        bnb_quantization=bnb_quantization,
+        bnb_quantization=False, # Causes problems with evaluation especially for fine-tuned mode
         verbose=verbose,
         display_indices=display_indices,
     )
@@ -358,14 +358,14 @@ if __name__ == "__main__":
     ## Parameters
     verbose = -1
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    bnb_quantization = True
+    bnb_quantization = False
     runs_per_model = 1
     
     # Generation parameters
     models_to_test = [
         "huggyllama/llama-7b",
-        "mistralai/Mistral-7B-Instruct-v0.3",
-        "Qwen/Qwen3-8B",
+        # "mistralai/Mistral-7B-Instruct-v0.3",
+        # "Qwen/Qwen3-1.7B",
         # "Qwen/Qwen3-14B",
     ]
     answering_prompt_template=ANSWERING_PROMPT_TEMPLATE
@@ -373,7 +373,7 @@ if __name__ == "__main__":
     repetition_penalty = None
     num_samples_to_test = 817
     num_examples_to_display = 10
-    do_sample=True
+    do_sample=False
     temperature=0.9
     top_p=0.95
     top_k=0
@@ -381,21 +381,21 @@ if __name__ == "__main__":
         [
             "high",
             "low",
-            # [16,18,20,22,24,26,28,30,32],
+            [16,18,20,22,24,26,28,30,32],
             list(range(0,32,2)),
         ],
-        [
-            "high",
-            "low",
-            # [16,18,20,22,24,26,28,30,32],
-            # list(range(0,32,2)), 
-        ],
-        [
-            "high",
-            "low",
-            # [18,20,22,24,26,28,30,32,34,36],
-            list(range(0,36,2)), 
-        ],
+        # [
+        #     "high",
+        #     "low",
+        #     # [16,18,20,22,24,26,28,30,32],
+        #     # list(range(0,32,2)), 
+        # ],
+        # [
+        #     "high",
+        #     "low",
+        #     # [18,20,22,24,26,28,30,32,34,36],
+        #     # list(range(0,36,2)), 
+        # ],
         # [
         #     "high",
         #     # "low",
@@ -440,11 +440,12 @@ if __name__ == "__main__":
     import os
     import pathlib
     import time
-    import re
-    from datetime import datetime
     
     start_time = time.time()
     for i, model_name in enumerate(models_to_test):
+        if i >= len(dola_layers_settings):
+            print(f"Warning: Not enough dola_layers_settings provided for model '{model_name}'. Skipping rest of the models.")
+            break
         output["results"].append({})
         output["results"][i]["model_name"] = model_name
         output["results"][i]["runs"] = []
@@ -504,22 +505,7 @@ if __name__ == "__main__":
     if judge_model_name:
         judge_name_part = judge_model_name.replace('/', '_')
     
-    # Generate date part (DD-MM-YYYY)
-    date_part = datetime.now().strftime("%d-%m-%Y")
-
-    # Determine the index for the current date
-    # Find existing files with the same date prefix
-    existing_files = [f for f in os.listdir(output_dir) if f"_{date_part}" in f]
-    
-    # Extract indices from existing files (e.g., "_1", "_2", etc.)
-    indices = []
-    for f in existing_files:
-        match = re.search(r"_(\d+)\.json$", f)
-        if match:
-            indices.append(int(match.group(1)))
-    
-    # Determine the next index
-    next_index = max(indices) + 1 if indices else 1
+    date_part, next_index = get_date_and_index(output_dir)
 
     # Assemble the filename parts
     filename_base = f"{model_name_part}_judge_{judge_name_part}_samples{num_samples_to_test}_runs{runs_per_model}_{date_part}_{next_index}"
