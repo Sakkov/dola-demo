@@ -2,7 +2,9 @@ import warnings
 import numpy as np
 import os
 import re
+import torch
 from datetime import datetime
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
 def suppress_transformers_warnings():
     """Suppresses specific UserWarnings from transformers.generation.configuration_utils."""
@@ -59,3 +61,61 @@ def get_date_and_index(output_dir):
     next_index = max(indices) + 1 if indices else 1
 
     return date_part, next_index
+
+def load_model_and_tokenizer(model_name, device, bnb_quantization, verbose):
+    if verbose >= 2:
+        print(f"Loading tokenizer: {model_name}")
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    if verbose >= 2:
+        print(f"\nLoading model: {model_name}")
+    if device == "cuda" and bnb_quantization:
+        # Configure BitsAndBytesConfig for 4-bit quantization
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+        )
+        if verbose >= 2:
+            print("Applying 4-bit BNB quantization as CUDA is available and BNB quantization is enabled.")
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            quantization_config=bnb_config,
+            device_map="auto"
+        )
+    elif device != "cuda" and bnb_quantization:
+        if verbose >= 2:
+            print("CUDA not available. Loading model in float32 precision on CPU.")
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.float32,
+            device_map=None
+        )
+    elif device == "cuda" and not bnb_quantization:
+        if verbose >= 2:
+            print("Loading model in bfloat16 precision on CUDA.")
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.bfloat16,
+            device_map="auto"
+        )
+    else:
+        if verbose >= 2:
+            print("Loading model in float32 precision on CPU.")
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.float32,
+            device_map=None
+        )
+    
+    # To check number of layers for DoLa:
+    config = model.config
+    if verbose >= 2:
+        print(f"Model '{model_name}' has {config.num_hidden_layers} layers.\n")
+
+    model.eval()
+
+    return model, tokenizer

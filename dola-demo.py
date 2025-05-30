@@ -4,7 +4,7 @@ from datasets import load_dataset
 import evaluate
 import numpy as np
 from tqdm import tqdm
-from evaluation_logic.utils import suppress_transformers_warnings, get_display_indices, get_date_and_index
+from evaluation_logic.utils import suppress_transformers_warnings, get_display_indices, get_date_and_index, load_model_and_tokenizer
 from evaluation_logic.prompts import ANSWERING_PROMPT_TEMPLATE, JUDGE_PROMPT_TEMPLATE, JUDGE_PROMPT_TEMPLATE_TRUE_FALSE, JUDGE_PROMPT_TEMPLATE_TRUE_FALSE_SIMPLE
 from evaluation_logic.ai_judge import evaluate_with_ai_judge
 
@@ -57,60 +57,7 @@ def run_truthfulqa_evaluation(
         print("\n===================================\n")
 
     # 1. Load Model and Tokenizer
-    if verbose >= 2:
-        print(f"Loading tokenizer: {model_name}")
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-
-    if verbose >= 2:
-        print(f"\nLoading model: {model_name}")
-    if device == "cuda" and bnb_quantization:
-        # Configure BitsAndBytesConfig for 4-bit quantization
-        bnb_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True,
-        )
-        if verbose >= 2:
-            print("Applying 4-bit BNB quantization as CUDA is available and BNB quantization is enabled.")
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            quantization_config=bnb_config,
-            device_map="auto"
-        )
-    elif device != "cuda" and bnb_quantization:
-        if verbose >= 2:
-            print("CUDA not available. Loading model in float32 precision on CPU.")
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            torch_dtype=torch.float32,
-            device_map=None
-        )
-    elif device == "cuda" and not bnb_quantization:
-        if verbose >= 2:
-            print("Loading model in bfloat16 precision on CUDA.")
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            torch_dtype=torch.bfloat16,
-            device_map="auto"
-        )
-    else:
-        if verbose >= 2:
-            print("Loading model in float32 precision on CPU.")
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            torch_dtype=torch.float32,
-            device_map=None
-        )
-    
-    # To check number of layers for DoLa:
-    config = model.config
-    if verbose >= 2:
-        print(f"Model '{model_name}' has {config.num_hidden_layers} layers.\n")
-
-    model.eval()
+    model, tokenizer = load_model_and_tokenizer(model_name, device, bnb_quantization, verbose)
 
     # 2. Load TruthfulQA Dataset
     if verbose >= 2:
@@ -182,11 +129,12 @@ def run_truthfulqa_evaluation(
         outputs_baseline = model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
+            dola_layers=None,
             do_sample=do_sample,
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
-            repetition_penalty=repetition_penalty,
+            repetition_penalty=1.0,
             pad_token_id=tokenizer.eos_token_id,
             stop_strings=stop_strings,
             tokenizer=tokenizer,
@@ -370,19 +318,20 @@ if __name__ == "__main__":
     ]
     answering_prompt_template=ANSWERING_PROMPT_TEMPLATE
     max_new_tokens = 50
-    repetition_penalty = None
+    repetition_penalty = 1.2
     num_samples_to_test = 817
     num_examples_to_display = 10
-    do_sample=False
+    do_sample=True
     temperature=0.9
     top_p=0.95
     top_k=0
     dola_layers_settings = [
         [
             "high",
-            "low",
-            [16,18,20,22,24,26,28,30,32],
-            list(range(0,32,2)),
+            # "low",
+            # [16,18,20,22,24,26,28,30,32],
+            # list(range(0,32,2)),
+            # [0,2,4,6,8,10,12,14,32],
         ],
         # [
         #     "high",
@@ -435,7 +384,13 @@ if __name__ == "__main__":
         },
         "results": [],
         "execution_time": 0,
+        "packages": []
     }
+    # list all packages and their versions
+    import pkg_resources
+    installed_packages = pkg_resources.working_set
+    packages_list = sorted(["%s==%s" % (i.key, i.version) for i in installed_packages])
+    output["packages"] = packages_list
 
     import os
     import pathlib
