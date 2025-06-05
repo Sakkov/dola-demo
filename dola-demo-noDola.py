@@ -322,6 +322,7 @@ if __name__ == "__main__":
         "meta-config": {
             "models_to_test": models_to_test,
             "device": device,
+            "seed": SEED,
             "answering_prompt_template": answering_prompt_template,
             "max_new_tokens": max_new_tokens,
             "repetition_penalty": repetition_penalty,
