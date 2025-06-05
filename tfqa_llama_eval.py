@@ -7,7 +7,7 @@ from tqdm import tqdm
 from evaluation_logic.ai_judge import _run_judge_inference, _parse_yes_no_output
 from evaluation_logic.prompts import JUDGE_PROMPT_TEMPLATE_TRUE_FALSE_SIMPLE, INFO_PROMPT_TEMPLATE_TRUE_FALSE_SIMPLE
 
-QA_INPUT_FILE = "tfqa_result.json"
+QA_INPUT_FILE = "tfqa_result_no-dola-full.json"
 
 JUDGE_MODEL_NAME = "allenai/truthfulqa-truth-judge-llama2-7B"
 INFO_MODEL_NAME = "allenai/truthfulqa-info-judge-llama2-7B"

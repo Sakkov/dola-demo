@@ -1,0 +1,25 @@
+name: no-dola-demo
+channels:
+  - nvidia
+  - pytorch
+  - conda-forge
+dependencies:
+  - pytorch-gpu
+  - pandas
+  - pydantic
+  - accelerate
+  - sentencepiece
+  - protobuf
+  - faiss-gpu
+  - sacremoses
+  - bitsandbytes
+  - transformers=4.28.1
+  - pip
+  - pip:
+    - langchain
+    - langchain-community
+    - langchain-huggingface
+    - evaluate
+    - nltk
+    - rouge_score
+    - matplotlib

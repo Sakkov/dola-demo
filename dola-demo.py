@@ -303,6 +303,10 @@ def run_many(
 
 if __name__ == "__main__":
 
+    SEED = 42
+    torch.manual_seed(SEED)
+    np.random.seed(SEED)
+
     ## Parameters
     verbose = -1
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -364,6 +368,7 @@ if __name__ == "__main__":
         "meta-config": {
             "models_to_test": models_to_test,
             "device": device,
+            "seed": SEED,
             "answering_prompt_template": answering_prompt_template,
             "max_new_tokens": max_new_tokens,
             "repetition_penalty": repetition_penalty,
