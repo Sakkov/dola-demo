@@ -123,6 +123,37 @@ def run_truthfulqa_evaluation(
         if display_example and verbose >= 2:
             print(f"  DoLa Answer: {answer_dola}\n")
 
+        # --- Ignore Summary --- #
+        original_attention_mask = inputs["attention_mask"].to(device)
+        custom_attention_mask = original_attention_mask.clone()
+
+        # Mask out periods
+        summary_token_ids = tokenizer.encode("Often the id of the period token id is different at the end of a word than separately.\n")[-2:]
+        for i in range(custom_attention_mask.shape[1]):
+            if inputs.input_ids[0, i] in summary_token_ids:
+                custom_attention_mask[0, i] = 0
+        
+        if display_example and verbose >= 2:
+            print("Generating with ISU...")
+        outputs_isu = model.generate(
+            input_ids = inputs["input_ids"],
+            max_new_tokens=max_new_tokens,
+            dola_layers=None,
+            do_sample=do_sample,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            repetition_penalty=1.0,
+            pad_token_id=tokenizer.eos_token_id,
+            stop_strings=stop_strings,
+            tokenizer=tokenizer,
+        )
+        answer_isu = tokenizer.batch_decode(outputs_isu[:, inputs.input_ids.shape[-1]:], skip_special_tokens=True)[0].strip().split('\n')[0]
+        if display_example and verbose >= 2:
+            print(f"  Ignore Summary Answer: {answer_isu}")
+            print(f"--------------------------------------------------------\n")
+
+
         # --- Baseline Generation (No DoLa) --- #
         if display_example and verbose >= 2:
             print("Generating with Baseline (No DoLa)...")
@@ -150,8 +181,10 @@ def run_truthfulqa_evaluation(
             "question": question,
             "reference_answers": reference_answers,
             "dola_answer": answer_dola,
+            "isu_answer": answer_isu,
             "baseline_answer": answer_baseline,
             "dola_judge_score": None,
+            "isu_judge_score": None,
             "baseline_judge_score": None,
         })
 
@@ -176,12 +209,19 @@ def run_truthfulqa_evaluation(
 
         if judge_model_name:
             dola_scores = [r["dola_judge_score"] for r in evaluation_results if r["dola_judge_score"] is not None]
+            isu_scores = [r["isu_judge_score"] for r in evaluation_results if r["isu_judge_score"] is not None]
             baseline_scores = [r["baseline_judge_score"] for r in evaluation_results if r["baseline_judge_score"] is not None]
             print(f"\nAI Judge Results (using {judge_model_name}):")
 
             if dola_scores:
                 avg_dola_score = np.mean(dola_scores)
                 print(f"  Average DoLa Judge-Score: {avg_dola_score:.2f}")
+            else:
+                print("  No valid scores found for DoLa answers.")
+
+            if isu_scores:
+                avg_isu_score = np.mean(isu_scores)
+                print(f"  Average DoLa Judge-Score: {avg_isu_score:.2f}")
             else:
                 print("  No valid scores found for DoLa answers.")
 
@@ -260,12 +300,15 @@ def run_many(
     
     # Print the averages
     all_dola_scores = []
+    all_isu_scores = []
     all_baseline_scores = []
     if evaluation_results and isinstance(evaluation_results[0], list): # Ensure it's a list of lists
         for single_run_result_list in evaluation_results:
             for sample_result in single_run_result_list:
                 if sample_result.get("dola_judge_score") is not None:
                     all_dola_scores.append(sample_result["dola_judge_score"])
+                if sample_result.get("isu_judge_score") is not None:
+                    all_isu_scores.append(sample_result["isu_judge_score"])
                 if sample_result.get("baseline_judge_score") is not None:
                     all_baseline_scores.append(sample_result["baseline_judge_score"])
 
@@ -277,10 +320,16 @@ def run_many(
 
     aggregate_results = {
         "dola_judge_score": None,
+        "isu_judge_score": None,
         "baseline_judge_score": None
     }
     if all_dola_scores:
         aggregate_results["dola_judge_score"] = np.mean(all_dola_scores)
+    else:
+        print("  No valid scores found for DoLa answers across all runs.")
+
+    if all_isu_scores:
+        aggregate_results["isu_judge_score"] = np.mean(all_isu_scores)
     else:
         print("  No valid scores found for DoLa answers across all runs.")
 

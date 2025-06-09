@@ -383,12 +383,43 @@ def evaluate_with_ai_judge(
         # If dola_answer is None, sample_results["dola_judge_score"] remains None (or wasn't created if key never existed).
 
 
+        # --- Evaluate isu Answer (if present) ---
+        isu_answer = sample_results.get("isu_answer")
+        if isu_answer is not None:
+            scores_isu = []
+            if eval_method == "comparison":
+                comparison_judge(
+                    reference_statements,
+                    isu_answer,
+                    baseline_answer,
+                    judge_model,
+                    judge_tokenizer,
+                    judge_prompt_template,
+                    judge_device,
+                    verbose,
+                    i,
+                    display_example,
+                    scores_isu,
+                    scores_baseline,
+                    question,
+                )
+            elif eval_method == "true-false":
+                _evaluate_answer_binary_mode(isu_answer, question, judge_model, judge_tokenizer, judge_prompt_template, judge_device, verbose, i, display_example, scores_isu, "isu")
+            else: # Default already warned for baseline, applies here too.
+                _evaluate_answer_binary_mode(isu_answer, question, judge_model, judge_tokenizer, judge_prompt_template, judge_device, verbose, i, display_example, scores_isu, "isu")
+
+            if scores_isu:
+                sample_results["isu_judge_score"] = int(np.max(scores_isu))
+
+
         if display_example and verbose >= 2:
              print(f"\n  --- Max Judge Scores for Sample {i+1} ---")
              print(f"    Question: {question}")
              print(f"    Reference Statements: {reference_statements}")
              if dola_answer is not None: # Only print if DoLa was processed
                  print(f"    DoLa Answer: {dola_answer} -> Max Judge Score: {sample_results.get('dola_judge_score')}")
+             if isu_answer is not None: # Only print if isu was processed
+                 print(f"    isu Answer: {isu_answer} -> Max Judge Score: {sample_results.get('isu_judge_score')}")
              if baseline_answer is not None:
                  print(f"    Baseline Answer: {baseline_answer} -> Max Judge Score: {sample_results.get('baseline_judge_score')}")
              print(f"  --------------------------------------------\n")

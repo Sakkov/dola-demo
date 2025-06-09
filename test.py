@@ -13,7 +13,7 @@ MODEL_NAME = "huggyllama/llama-7b"
 # huggyllama/llama-7b
 # Qwen/Qwen3-1.7B
 
-MAX_NEW_TOKENS = 1
+MAX_NEW_TOKENS = 10
 REPETITION_PENALTY = 1.2
 
 DOLA_LAYERS_SETTING = None
@@ -39,8 +39,6 @@ if tokenizer.pad_token is None:
 
 # 2. Prepare inputs
 context = """
-Wolves (Canis lupus), often referred to as grey wolves, are highly intelligent and social apex predators, representing a keystone species with profound impacts on the ecosystems they inhabit. Their historical range once spanned the majority of the Northern Hemisphere, from the arctic tundra and taiga forests of North America and Eurasia to the arid deserts of the Arabian Peninsula and the dense woodlands of India. Today, due to habitat loss, human persecution, and prey depletion, their range is significantly reduced, though conservation efforts are ongoing. Wolves exhibit remarkable adaptability, thriving in diverse environments by leveraging their complex social structures and cooperative hunting strategies. Pack sizes can vary dramatically, from as few as two individuals (a breeding pair) to over thirty in areas with abundant prey, though typical packs number between 5 and 11. These packs are usually family units, led by an alpha male and alpha female, who are typically the only breeding pair. Subordinate wolves within the pack hierarchy participate in hunting, pup-rearing, and territorial defense. Communication is sophisticated, involving scent marking, body language (such as tail position, ear posture, and facial expressions), and a wide array of vocalizations, including howls, barks, whines, and growls. Howling serves multiple purposes: assembling the pack, warning rival packs of territorial boundaries, and long-distance communication, sometimes audible up to 10 miles (16 kilometers) in optimal conditions.
-
 The diet of the wolf is primarily carnivorous, focusing on large ungulates such as deer, elk, moose, caribou, bison, and wild boar, depending on regional availability. They are opportunistic feeders, however, and will consume smaller prey like beavers, rabbits, rodents, and fish. Carrion forms an important part of their diet, especially during lean times, and they have been observed consuming fruits and berries in late summer and autumn. Their hunting technique is a masterclass in endurance and strategy, often involving lengthy chases to test the stamina and fitness of prey, singling out the old, young, or infirm. A single wolf can consume up to 20 pounds (9 kilograms) of meat in one feeding, and their digestive system is incredibly efficient, designed to extract maximum nutrition from meat, organs, and even bone. The process begins with powerful jaws and teeth capable of crushing large bones, followed by a stomach that can expand significantly, and a digestive tract optimized for rapid protein breakdown. Digestion of soft tissues commences almost immediately upon ingestion.
 
 Conservation of wolves has been a complex and often contentious issue. While recognized for their ecological importance, particularly in regulating prey populations and promoting biodiversity through trophic cascades (e.g., the reintroduction to Yellowstone National Park in 1995 led to changes in elk behavior, regrowth of riparian vegetation, and a return of beaver populations), wolves also come into conflict with human interests, primarily through livestock depredation. This conflict has historically led to widespread extermination campaigns. Modern conservation strategies aim for a balance, employing methods such as habitat protection and restoration, creating wildlife corridors to connect fragmented populations, reintroduction programs, public education to foster understanding and tolerance, and the implementation of non-lethal deterrents to protect livestock. These deterrents can include guard animals (like dogs, llamas, or donkeys), fladry (lines of rope with hanging flags that wolves are wary of crossing), range riders, and improved fencing. Genetic studies play a crucial role in conservation, helping to understand population dynamics, genetic diversity, and the delineation of distinct subspecies, such as the Arctic wolf (Canis lupus arctos) or the Indian wolf (Canis lupus pallipes). International cooperation is often vital, as wolf populations frequently cross national borders.
@@ -54,6 +52,14 @@ Contemporary zoology, biology, and physiology, of course, categorically and uneq
 question = "Can people who have been consumed by a wolf be rescued?"
 prompt = PROMPT_TEMPLATE.format(context=context, question=question)
 inputs = tokenizer(prompt, return_tensors="pt").to(device)
+original_attention_mask = inputs["attention_mask"].to(device)
+custom_attention_mask = original_attention_mask.clone()
+
+# Mask out periods
+summary_token_ids = tokenizer.encode("Often the id of the period token id is different at the end of a word than separately.\n")[-2:]
+for i in range(custom_attention_mask.shape[1]):
+    if inputs.input_ids[0, i] in summary_token_ids:
+        custom_attention_mask[0, i] = 0
 
 # 3. Call model.generate() directly with DoLa and dictionary return flags
 # These parameters will be used to create a GenerationConfig internally
@@ -71,13 +77,14 @@ generate_kwargs = {
     "top_p": None,
     "top_k": None,
     "repetition_penalty": REPETITION_PENALTY,
+    "attention_mask": custom_attention_mask,
     "pad_token_id": tokenizer.pad_token_id,
     "eos_token_id": tokenizer.eos_token_id
 }
 
 
 print("\nCalling model.generate() directly...")
-outputs = model.generate(**inputs, **generate_kwargs)
+outputs = model.generate(input_ids=inputs["input_ids"], **generate_kwargs)
 
 # 4. Inspect the output
 
